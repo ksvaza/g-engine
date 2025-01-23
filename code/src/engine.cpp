@@ -1,8 +1,10 @@
 #include "../include/engine.hpp"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "../include/winlib.hpp"
-#include "../include/hwinputs.hpp"
+#include <winlib.hpp>
+#include <hwinputs.hpp>
+//#include <render.hpp>
+#include <sprite.hpp>
 
 namespace Gengine
 {
@@ -14,7 +16,7 @@ namespace Gengine
     {
         Initialiser.InitialiseWindow(&window, 800, 600, "Hello, World!");
         Input.Initialise(window);
-        Input.SetTestMode(1);
+        Input.SetTestMode(0);
     }
     void Engine::Terminate()
     {
@@ -22,6 +24,9 @@ namespace Gengine
     }
     int Engine::Run()
     {
+        Sprite sprite;
+        sprite.Default();
+
         float deltaTime = 0.0f;
         while (!glfwWindowShouldClose(window))
         {
@@ -29,7 +34,7 @@ namespace Gengine
             
             Update(deltaTime);
 
-            Input.Update();   
+            Input.Update();
 
             glfwSwapBuffers(window);
             glfwPollEvents();

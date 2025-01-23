@@ -1,3 +1,4 @@
+#pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -5,9 +6,9 @@
 namespace Gengine
 {
     // Constants
-    #define _MAX_RESSETABLE_KEY_COUNT 20
-    #define _MAX_KEY_COUNT 347 // 346 max keycode
-    #define _MAX_MOUSE_BUTTON_COUNT 5
+    constexpr static int _MAX_RESSETABLE_KEY_COUNT = 20;
+    constexpr static int _MAX_KEY_COUNT = 347; // 346 max keycode
+    constexpr static int _MAX_MOUSE_BUTTON_COUNT = 5;
 
     // Structs
     typedef struct {
@@ -35,14 +36,10 @@ namespace Gengine
             static void SetTestMode(char mode);
             static void Update();
             static void Initialise(GLFWwindow* window);
-
-            HWInputs(){}
-            ~HWInputs(){}
         private:
             // Variables
             static int RESETTABLE_KEYS[_MAX_RESSETABLE_KEY_COUNT];
             static int RESETTABLE_KEY_COUNT;
-            static char RESETTABLE_MOUSE_BUTTONS[_MAX_MOUSE_BUTTON_COUNT];
             static char RESETTABLE_MOUSE_BUTTON_COUNT;
             static glm::vec2 LAST_MOUSE_POSITION;
             static char TEST_MODE;
