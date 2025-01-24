@@ -11,7 +11,8 @@ namespace Gengine
         if (!glfwInit())
         {
             printf("\n! Failed to initialise glfw !\n\n");
-            return -1;
+            glfwTerminate();
+            return 1;
         }
         
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -24,7 +25,7 @@ namespace Gengine
         {
             printf("Failed to create GLFW window\n");
             glfwTerminate();
-            return -1;
+            return 2;
         }
         glfwMakeContextCurrent(*window);
 
@@ -38,7 +39,7 @@ namespace Gengine
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             printf("Failed to initialize GLAD\n");
-            return -1;
+            return 3;
         }
 
         glViewport(0, 0, width, height);

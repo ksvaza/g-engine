@@ -1,10 +1,12 @@
 #include "../include/engine.hpp"
+#include <stdio.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <winlib.hpp>
 #include <hwinputs.hpp>
-//#include <render.hpp>
+#include <render.hpp>
 #include <sprite.hpp>
+#include <shader.hpp>
 
 namespace Gengine
 {
@@ -26,7 +28,13 @@ namespace Gengine
     {
         Sprite sprite;
         sprite.Default();
+        Shader shader;
+        shader.Read("shaders/vertex.glsl", GL_VERTEX_SHADER);
+        shader.Read("shaders/fragment.glsl", GL_FRAGMENT_SHADER);
+        shader.Compile();
+        shader.Use();
 
+        TotalTime = 0.0f;
         float deltaTime = 0.0f;
         while (!glfwWindowShouldClose(window))
         {
@@ -34,13 +42,18 @@ namespace Gengine
             
             Update(deltaTime);
 
+            Render.Clear();
             Input.Update();
+            shader.Use();
+            Render.DrawSprite(sprite);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
             
+            TotalTime += deltaTime;
             deltaTime = (float)glfwGetTime();
         }
+        printf("Window closed after %f seconds\n", TotalTime);
 
         return 0;
     }

@@ -1,8 +1,9 @@
 #pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "../include/winlib.hpp"
-#include "../include/hwinputs.hpp"
+#include <winlib.hpp>
+#include <hwinputs.hpp>
+#include <render.hpp>
 
 namespace Gengine
 {
@@ -12,8 +13,10 @@ namespace Gengine
         GLFWwindow* window;
         HWInputs Input;
         WindowInitializer Initialiser;
+        Renderer Render;
         int Update(float deltaTime);
     public:
+        float TotalTime;
         void Initialise();
         void Terminate();
         int Run();

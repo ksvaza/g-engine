@@ -9,5 +9,6 @@ namespace Gengine
         
     public:
         int DrawSprite(Sprite sprite);
+        void Clear();
     };
 }

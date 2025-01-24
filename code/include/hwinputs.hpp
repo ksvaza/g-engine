@@ -36,6 +36,7 @@ namespace Gengine
             static void SetTestMode(char mode);
             static void Update();
             static void Initialise(GLFWwindow* window);
+            static void SetMouseStatus(GLFWwindow* window, GLenum status); // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
         private:
             // Variables
             static int RESETTABLE_KEYS[_MAX_RESSETABLE_KEY_COUNT];

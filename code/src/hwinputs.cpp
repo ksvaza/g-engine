@@ -78,6 +78,11 @@ namespace Gengine
         // vajag
         if (glfwRawMouseMotionSupported()) { glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE); }
     }
+    void HWInputs::SetMouseStatus(GLFWwindow* window, GLenum status)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, status);
+    }
+    
     // Callbacks
     void HWInputs::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
