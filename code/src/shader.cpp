@@ -1,5 +1,6 @@
 #include "../include/shader.hpp"
 #include <stdio.h>
+#include <cstring>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -36,12 +37,14 @@ namespace Gengine {
         if (type == GL_VERTEX_SHADER)
         {
             vertexShader = new char[length + 1];
+            memset(vertexShader, 0, length + 1);
             vertexShader[length] = '\0';
             fread(vertexShader, 1, length, file);
         }
         else if (type == GL_FRAGMENT_SHADER)
         {
             fragmentShader = new char[length + 1];
+            memset(fragmentShader, 0, length + 1);
             fragmentShader[length] = '\0';
             fread(fragmentShader, 1, length, file);
         }

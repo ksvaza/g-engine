@@ -31,6 +31,7 @@ namespace Gengine
         Shader shader;
         shader.Read("shaders/vertex.glsl", GL_VERTEX_SHADER);
         shader.Read("shaders/fragment.glsl", GL_FRAGMENT_SHADER);
+        printf("Fragment shader: %s\n", shader.fragmentShader);
         shader.Compile();
         shader.Use();
 
@@ -39,15 +40,22 @@ namespace Gengine
         while (!glfwWindowShouldClose(window))
         {
             glfwSetTime((double)0.0);
-            
+
+            printf("Update, ");
             Update(deltaTime);
 
+            printf("Clear, ");
             Render.Clear();
+            printf("IOUpdate, ");
             Input.Update();
+            printf("Use, ");
             shader.Use();
-            Render.DrawSprite(sprite);
+            printf("DrawSprite, ");
+            Render.DrawSprite(sprite); // crashes after second iteration
 
+            printf("SwapBuffers, ");
             glfwSwapBuffers(window);
+            printf("PollEvents\n");
             glfwPollEvents();
             
             TotalTime += deltaTime;
