@@ -4,7 +4,7 @@
 
 namespace Gengine
 {
-    int Renderer::DrawSprite(Sprite sprite)
+    int Renderer::DrawSprite()//Sprite sprite);
     {
         float vertices[9] = {
             -0.5f, -0.5f, 0.0f,
@@ -17,7 +17,6 @@ namespace Gengine
         glGenBuffers(1, &VBO);
         
         glBindVertexArray(VAO);
-
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
@@ -25,8 +24,11 @@ namespace Gengine
         glEnableVertexAttribArray(0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
         glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindVertexArray(0);
+        glDeleteBuffers(1, &VBO);
+        glDeleteVertexArrays(1, &VAO);
 
         return 0;
     }

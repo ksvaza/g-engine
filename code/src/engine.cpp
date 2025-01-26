@@ -51,7 +51,7 @@ namespace Gengine
             printf("Use, ");
             shader.Use();
             printf("DrawSprite, ");
-            Render.DrawSprite(sprite); // crashes after second iteration
+            Render.DrawSprite();//sprite); // crashes after second iteration
 
             printf("SwapBuffers, ");
             glfwSwapBuffers(window);

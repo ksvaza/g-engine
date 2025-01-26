@@ -8,7 +8,7 @@ namespace Gengine
     private:
         
     public:
-        int DrawSprite(Sprite sprite);
+        int DrawSprite();//Sprite sprite);
         void Clear();
     };
 }

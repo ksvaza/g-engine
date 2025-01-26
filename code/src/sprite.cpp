@@ -60,8 +60,8 @@ namespace Gengine
     }
     Sprite::~Sprite()
     {
-        delete Verticies;
-        delete Indicies;
+        delete[] Verticies;
+        delete[] Indicies;
     }
     void Sprite::Default()
     {
