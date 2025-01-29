@@ -4,6 +4,7 @@
 #include <winlib.hpp>
 #include <hwinputs.hpp>
 #include <render.hpp>
+#include <mesh.hpp>
 
 namespace Gengine
 {
@@ -12,8 +13,9 @@ namespace Gengine
     private:
         GLFWwindow* window;
         HWInputs Input;
-        WindowInitializer Initialiser;
+        Window Gwindow;
         Renderer Render;
+        MeshGenerator MeshGen;
         int Update(float deltaTime);
     public:
         float TotalTime;

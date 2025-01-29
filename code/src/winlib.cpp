@@ -5,7 +5,11 @@
 
 namespace Gengine
 {
-    int WindowInitializer::InitialiseWindow(GLFWwindow** window, int width, int height, const char* name)
+    int Window::Width = 600;
+    int Window::Height = 600;
+    float Window::AspectRatio = 1.0f;
+
+    int Window::InitialiseWindow(GLFWwindow** window, int width, int height, const char* name)
     {
         // GLFW initialisation
         if (!glfwInit())
@@ -46,13 +50,16 @@ namespace Gengine
 
         return 0;
     }
-    int WindowInitializer::Terminate()
+    int Window::Terminate()
     {
         glfwTerminate();
         return 0;
     }
-    void WindowInitializer::default_framebuffer_size_callback(GLFWwindow* window, int width, int height)
+    void Window::default_framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
         glViewport(0, 0, width, height);
+        Width = width;
+        Height = height;
+        AspectRatio = (float)width / (float)height;
     }
 }

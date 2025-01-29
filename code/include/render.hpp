@@ -1,5 +1,5 @@
 #pragma once
-#include <sprite.hpp>
+#include <mesh.hpp>
 
 namespace Gengine
 {
@@ -8,7 +8,7 @@ namespace Gengine
     private:
         
     public:
-        int DrawSprite();//Sprite sprite);
+        int DrawMesh(Mesh mesh, char wireFrame, char boundingBox);
         void Clear();
     };
 }

@@ -5,7 +5,7 @@
 #include <winlib.hpp>
 #include <hwinputs.hpp>
 #include <render.hpp>
-#include <sprite.hpp>
+#include <mesh.hpp>
 #include <shader.hpp>
 
 namespace Gengine
@@ -16,22 +16,28 @@ namespace Gengine
     }
     void Engine::Initialise()
     {
-        Initialiser.InitialiseWindow(&window, 800, 600, "Hello, World!");
+        Gwindow.InitialiseWindow(&window, 600, 600, "Hello, Triangle!");
         Input.Initialise(window);
         Input.SetTestMode(0);
     }
     void Engine::Terminate()
     {
-        Initialiser.Terminate();
+        Gwindow.Terminate();
     }
     int Engine::Run()
     {
-        Sprite sprite;
-        sprite.Default();
+        Mesh mesh;
+        MeshGen.RegularShape(&mesh, G_HEXAGON);
+        MeshGen.CalculateBounds(&mesh);
+        mesh.SetTransform();
+        mesh.FillColour(1.0f, 0.5f, 0.2f, 1.0f);
+        mesh.Print();
+
         Shader shader;
         shader.Read("shaders/vertex.glsl", GL_VERTEX_SHADER);
+        //printf("Vertex shader: %s\n", shader.vertexShader);
         shader.Read("shaders/fragment.glsl", GL_FRAGMENT_SHADER);
-        printf("Fragment shader: %s\n", shader.fragmentShader);
+        //printf("Fragment shader: %s\n", shader.fragmentShader);
         shader.Compile();
         shader.Use();
 
@@ -41,27 +47,27 @@ namespace Gengine
         {
             glfwSetTime((double)0.0);
 
-            printf("Update, ");
             Update(deltaTime);
 
-            printf("Clear, ");
             Render.Clear();
-            printf("IOUpdate, ");
             Input.Update();
-            printf("Use, ");
             shader.Use();
-            printf("DrawSprite, ");
-            Render.DrawSprite();//sprite); // crashes after second iteration
 
-            printf("SwapBuffers, ");
+            // Korrigieren die Mesh aus Mouse Position
+            float x = ((Input.Mouse.MousePosition.x - (Gwindow.Width / 2)) * 2) / (Gwindow.Width);
+            float y = -((Input.Mouse.MousePosition.y - (Gwindow.Height / 2)) * 2) / (Gwindow.Height);
+            mesh.SetTransform((Transform){position: glm::vec3(x, y, 0.0f), scale: glm::vec3(1.0f, 1.0f, 1.0f)});
+            Render.DrawMesh(mesh, 0, 0); // crashes after second iteration
+
             glfwSwapBuffers(window);
-            printf("PollEvents\n");
             glfwPollEvents();
             
             TotalTime += deltaTime;
             deltaTime = (float)glfwGetTime();
         }
         printf("Window closed after %f seconds\n", TotalTime);
+
+        mesh.Delete();
 
         return 0;
     }
