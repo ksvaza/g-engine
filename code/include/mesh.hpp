@@ -30,9 +30,13 @@ namespace Gengine
     }AABox; // Axis aligned box
 
     typedef enum {
-        G_TRIANGLE = 0x10,
-        G_RECTANGLE = 0x11,
-        G_HEXAGON = 0x12
+        G_TRIANGLE = 0x13,
+        G_RECTANGLE = 0x14,
+        G_PENTAGON = 0x15,
+        G_HEXAGON = 0x16,
+        G_OCTAGON = 0x18,
+        G_CIRCLE = 0x20,
+        G_STAR = 0x21
     }Gshape;
 
     class Mesh
@@ -45,6 +49,8 @@ namespace Gengine
     public:
         int VertexCount = 0;
         int IndexCount = 0;
+
+        static Mesh Empty();
 
         void Create(int vertexCount, int indicies);
         void Delete();

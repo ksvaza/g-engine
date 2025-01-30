@@ -7,4 +7,8 @@ namespace Gengine {
         glm::vec3 rotation;
         glm::vec3 scale;
     }Transform;
+
+    glm::mat4 TransformToMatrix(const Transform& t);
+
+    Transform CombineTransforms(const Transform& parent, const Transform& child);
 }

@@ -8,6 +8,15 @@
 namespace Gengine
 {
     // Mesh functions
+    Mesh Mesh::Empty()
+    {
+        Mesh mesh;
+        mesh.Vertices = NULL;
+        mesh.Indices = NULL;
+        mesh.VertexCount = 0;
+        mesh.IndexCount = 0;
+        return mesh;
+    }
     void Mesh::Create(int vertexCount, int indexCount)
     {
         if (Vertices) { free(Vertices); }
@@ -23,8 +32,8 @@ namespace Gengine
     }
     void Mesh::Delete()
     {
-        free(Vertices);
-        free(Indices);
+        if (Vertices) { free(Vertices); }
+        if (Indices) { free(Indices); }
     }
     void Mesh::Fill(Vertex* vertices, Index* indices)
     {
