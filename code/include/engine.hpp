@@ -5,6 +5,7 @@
 #include <hwinputs.hpp>
 #include <render.hpp>
 #include <mesh.hpp>
+#include <laygui.hpp>
 
 namespace Gengine
 {
@@ -16,6 +17,7 @@ namespace Gengine
         Window Gwindow;
         Renderer Render;
         MeshGenerator MeshGen;
+        Glayout Layout;
         int Update(float deltaTime);
     public:
         float TotalTime;

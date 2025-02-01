@@ -3,45 +3,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <mesh.hpp>
+#include <shader.hpp>
 
 namespace Gengine
 {
-    int Renderer::DrawMesh(Mesh mesh, char wireFrame, char boundingBox)
+    int Renderer::DrawMesh(Mesh mesh, char wireFrame, char boundingBox, Shader shader)
     {
-
-        /*float* vertexData = (float*)malloc(sizeof(float) * mesh.VertexCount * 7);
-        for (int i = 0; i < mesh.VertexCount; i++)
-        {
-            vertexData[i * 7 + 0] = mesh.Vertices[i].x;
-            vertexData[i * 7 + 1] = mesh.Vertices[i].y;
-            vertexData[i * 7 + 2] = mesh.Vertices[i].z;
-            vertexData[i * 7 + 3] = mesh.Vertices[i].r;
-            vertexData[i * 7 + 4] = mesh.Vertices[i].g;
-            vertexData[i * 7 + 5] = mesh.Vertices[i].b;
-            vertexData[i * 7 + 6] = mesh.Vertices[i].a;
-        }
-        unsigned int* indices = (unsigned int*)malloc(sizeof(unsigned int) * mesh.IndexCount * 3);
-        for (int i = 0; i < mesh.IndexCount; i++)
-        {
-            indices[i * 3 + 0] = mesh.Indices[i].I[0];
-            indices[i * 3 + 1] = mesh.Indices[i].I[1];
-            indices[i * 3 + 2] = mesh.Indices[i].I[2];
-        }
-        */
-        float* vertexData = (float*)malloc(sizeof(float) * mesh.VertexCount * 7);
+        float* vertexData = (float*)mesh.GetVertices();
         unsigned int* indices = (unsigned int*)mesh.GetIndices();
-        Transform transform = mesh.GetTransform();
 
-        for (int i = 0; i < mesh.VertexCount; i++)
-        {
-            vertexData[i * 7 + 0] = mesh.GetVertices()[i].x * transform.scale.x + transform.position.x;
-            vertexData[i * 7 + 1] = mesh.GetVertices()[i].y * transform.scale.y + transform.position.y;
-            vertexData[i * 7 + 2] = mesh.GetVertices()[i].z * transform.scale.z + transform.position.z;
-            vertexData[i * 7 + 3] = mesh.GetVertices()[i].r;
-            vertexData[i * 7 + 4] = mesh.GetVertices()[i].g;
-            vertexData[i * 7 + 5] = mesh.GetVertices()[i].b;
-            vertexData[i * 7 + 6] = mesh.GetVertices()[i].a;
-        }
+        shader.Use();
+        shader.SetUniformMat4("uTransform", TransformToMatrix(mesh.GetTransform()));
+        shader.SetUniformVec4("uColour", mesh.GetColour());
 
         // Draw mesh
         // --------------------------------

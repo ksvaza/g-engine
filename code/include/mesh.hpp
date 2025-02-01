@@ -45,19 +45,24 @@ namespace Gengine
         Vertex* Vertices = NULL;
         Index* Indices = NULL;
         AABox BoundingBox;
-        Transform transform;
     public:
         int VertexCount = 0;
         int IndexCount = 0;
 
+        Transform transform;
+        glm::vec4 colour;
+
         static Mesh Empty();
 
         void Create(int vertexCount, int indicies);
+        void Recreate(int vertexCount, int indicies);
         void Delete();
         void Fill(Vertex* verticies, Index* indicies);
         Vertex* GetVertices();
         Index* GetIndices();
         void FillColour(float r, float g, float b, float a);
+        void SetColour(glm::vec4 colour);
+        glm::vec4 GetColour();
         void Print();
 
         void SetBoundingBox(AABox box);
@@ -70,8 +75,10 @@ namespace Gengine
     class MeshGenerator
     {
     public:
-        int HelloTriangle(Mesh* mesh);
-        int RegularShape(Mesh* mesh, Gshape shape);
-        int CalculateBounds(Mesh* mesh);
+        static int HelloTriangle(Mesh* mesh);
+        static int RegularShape(Mesh* mesh, Gshape shape);
+        static int CalculateBounds(Mesh* mesh);
+        static int StichMesh(Mesh* base, Mesh* add);
+        static int AddMesh(Mesh* base, Mesh* add);
     };
 }

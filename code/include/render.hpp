@@ -1,5 +1,6 @@
 #pragma once
 #include <mesh.hpp>
+#include <shader.hpp>
 
 namespace Gengine
 {
@@ -8,7 +9,7 @@ namespace Gengine
     private:
         
     public:
-        int DrawMesh(Mesh mesh, char wireFrame, char boundingBox);
+        int DrawMesh(Mesh mesh, char wireFrame, char boundingBox, Shader shader);
         void Clear();
     };
 }

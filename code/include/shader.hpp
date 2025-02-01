@@ -1,21 +1,29 @@
 #pragma once
+#include <stdlib.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 namespace Gengine
 {
     class Shader
     {
+    private:
+        char* vertexShader = NULL;
+        char* fragmentShader = NULL;
+        unsigned int vertexShaderID = 0;
+        unsigned int fragmentShaderID = 0;
+        unsigned int shaderProgram = 0;
     public:
-        char* vertexShader;
-        char* fragmentShader;
-        unsigned int vertexShaderID, fragmentShaderID;
-        unsigned int shaderProgram;
-    //public:
         int Read(const char* filepath, GLenum type); // GL_VERTEX_SHADER or GL_FRAGMENT_SHADER
         int Compile();
         unsigned int Use();
-        Shader();
-        ~Shader();
+        void Delete();
+
+        void SetUniformMat4(const char* name, glm::mat4 matrix);
+        void SetUniformVec4(const char* name, glm::vec4 vector);
+
+        Shader(){};
+        ~Shader(){};
     };
 }

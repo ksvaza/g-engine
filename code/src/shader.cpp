@@ -1,22 +1,16 @@
 #include "../include/shader.hpp"
 #include <stdio.h>
+#include <stdlib.h>
 #include <cstring>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Gengine {
-    Shader::Shader()
+    void Shader::Delete()
     {
-        vertexShader = NULL;
-        fragmentShader = NULL;
-        vertexShaderID = 0;
-        fragmentShaderID = 0;
-        shaderProgram = 0;
-    }
-    Shader::~Shader()
-    {
-        delete vertexShader;
-        delete fragmentShader;
+        free(vertexShader);
+        free(fragmentShader);
     }
     int Shader::Read(const char* filepath, GLenum type)
     {
@@ -36,16 +30,14 @@ namespace Gengine {
         // Write to correct buffer and setup source
         if (type == GL_VERTEX_SHADER)
         {
-            vertexShader = new char[length + 1];
+            vertexShader = (char*)malloc(length + 1);
             memset(vertexShader, 0, length + 1);
-            vertexShader[length] = '\0';
             fread(vertexShader, 1, length, file);
         }
         else if (type == GL_FRAGMENT_SHADER)
         {
-            fragmentShader = new char[length + 1];
+            fragmentShader = (char*)malloc(length + 1);
             memset(fragmentShader, 0, length + 1);
-            fragmentShader[length] = '\0';
             fread(fragmentShader, 1, length, file);
         }
         else
@@ -108,5 +100,15 @@ namespace Gengine {
     {
         glUseProgram(shaderProgram);
         return shaderProgram;
+    }
+    void Shader::SetUniformMat4(const char* name, glm::mat4 matrix)
+    {
+        unsigned int location = glGetUniformLocation(shaderProgram, name);
+        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+    void Shader::SetUniformVec4(const char* name, glm::vec4 vector)
+    {
+        unsigned int location = glGetUniformLocation(shaderProgram, name);
+        glUniform4fv(location, 1, glm::value_ptr(vector));
     }
 }

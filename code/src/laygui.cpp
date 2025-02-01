@@ -1,7 +1,8 @@
 #include "../include/laygui.hpp"
+#include <render.hpp>
+#include <shader.hpp>
 #include <mesh.hpp>
 #include <glm/glm.hpp>
-#include <functional>
 
 using namespace std;
 
@@ -16,7 +17,12 @@ namespace Gengine
         element->visible = 1;
         element->uniqueID = (intptr_t)element;
         element->type = type;
-        element->transform = (Transform){position: glm::vec3(0.0f, 0.0f, 0.0f), scale: glm::vec3(1.0f, 1.0f, 1.0f)};
+        Transform transform;
+        transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+        transform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+        element->transform = transform;
+        element->parent = NULL;
         element->children = NULL;
         element->attributes = NULL;
         element->childCount = 0;
@@ -32,7 +38,6 @@ namespace Gengine
                 DeleteElement(element->children[i]);
             }
         }
-        free((void*)element->uniqueID);
         if (element->attribCount > 0)
         {
             for (int i = 0; i < element->attribCount; i++)
@@ -40,6 +45,33 @@ namespace Gengine
                 free(element->attributes[i]);
             }
         }
+        if (element->parent)
+        {
+            for (int i = 0; i < element->childCount; i++)
+            {
+                if (element->children[i]->uniqueID == element->uniqueID)
+                {
+                    element->children[i] = NULL;
+                }
+            }
+            SortChildren(element->parent);
+        }
+    }
+    void Glayout::SortChildren(G_UIelement* parent)
+    {
+        int16_t offset = 0;
+        for (int i = 0; i < parent->childCount; i++)
+        {
+            if (parent->children[i] == NULL)
+            {
+                offset++;
+            }
+            else
+            {
+                parent->children[i - offset] = parent->children[i];
+            }
+        }
+        parent->childCount -= offset;
     }
     void Glayout::AddAttribute(G_UIelement* element, G_UIelementAttribute attribute)
     {
@@ -78,7 +110,9 @@ namespace Gengine
     {
         CreateElement(element, G_BUTTON);
         G_UIelementAttribute attribute;
-        attribute.button = (G_UIattribButton){type: G_BUTTON_ATTRIB};
+        G_UIattribButton button;
+        button.type = G_BUTTON_ATTRIB;
+        attribute.button = button;
         AddAttribute(element, attribute);
     }
     void Glayout::AddButtonCallbacks(G_UIelement* element, void* onHoverIn, void* onHoverOut, void* onPress, void* onRelease)
@@ -99,13 +133,43 @@ namespace Gengine
     // UI system functions
     // ----------------------------------------------------------------
 
+    void Glayout::recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    {
+        if (element->type == G_BUTTON)
+        {
+            buttonList->push_back(element);
+        }
+        for (int i = 0; i < element->childCount; i++)
+        {
+            recursiveAddButtons(element->children[i], buttonList);
+        }
+    }
+    void Glayout::recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    {
+        if (element->type == G_BUTTON)
+        {
+            for (int i = 0; i < (int)buttonList->size(); i++)
+            {
+                if ((*buttonList)[i]->uniqueID == element->uniqueID)
+                {
+                    buttonList->erase(buttonList->begin() + i);
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i < element->childCount; i++)
+        {
+            recursiveRemoveButtons(element->children[i], buttonList);
+        }
+    }
     void Glayout::AddElement(G_UIelement element)
     {
         elementList.push_back(element);
+        recursiveAddButtons(&element, &UI_buttonList);
     }
     void Glayout::RemoveElement(intptr_t uniqueID)
     {
-        for (int i = 0; i < elementList.size(); i++)
+        for (int i = 0; i < (int)elementList.size(); i++)
         {
             if (elementList[i].uniqueID == uniqueID)
             {
@@ -114,15 +178,26 @@ namespace Gengine
                     DeleteElement(elementList[i].children[j]);
                 }
                 elementList.erase(elementList.begin() + i);
+                recursiveRemoveButtons(&elementList[i], &UI_buttonList);
                 break;
             }
         }
     }
+    Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
+    {
+        Mesh mesh = element->mesh;
+        for (int i = 0; i < element->childCount; i++)
+        {
+            Mesh childMesh = recursiveMeshAdder(element->children[i]);
+            MeshGenerator::AddMesh(&mesh, &childMesh);
+        }
+        mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
+        return mesh;
+    }
     Mesh Glayout::PackupMeshes(intptr_t uniqueID)
     {
-        // Find requested root element
-        G_UIelement* root = nullptr;
-        for (int i = 0; i < elementList.size(); i++)
+        G_UIelement* root = NULL;
+        for (int i = 0; i < (int)elementList.size(); i++)
         {
             if (elementList[i].uniqueID == uniqueID)
             {
@@ -130,97 +205,27 @@ namespace Gengine
                 break;
             }
         }
-        if (!root)
-            return Mesh::Empty();
+        if (!root) { return Mesh::Empty(); }
 
-        // Merges src's vertices/indices into dest, offsetting the indices appropriately
-        auto mergeMeshes = [&](Mesh& dest, Mesh& src)
+        return recursiveMeshAdder(root);
+    }
+    void Glayout::DrawElements(Renderer render, Shader shader)
+    {
+        for (int i = 0; i < (int)elementList.size(); i++)
         {
-            int oldVertexCount = dest.VertexCount;
-            int newVertexCount = oldVertexCount + src.VertexCount;
-            int oldIndexCount  = dest.IndexCount;
-            int newIndexCount  = oldIndexCount + src.IndexCount;
-
-            // Backup existing data
-            std::vector<Vertex> oldVertices(oldVertexCount);
-            for(int i=0; i<oldVertexCount; i++)
-                oldVertices[i] = dest.GetVertices()[i];
-            std::vector<Index> oldIndices(oldIndexCount);
-            for(int i=0; i<oldIndexCount; i++)
-                oldIndices[i] = dest.GetIndices()[i];
-
-            // Recreate dest with bigger arrays
-            dest.Create(newVertexCount, newIndexCount);
-
-            // Restore old data
-            for(int i=0; i<oldVertexCount; i++)
-                dest.GetVertices()[i] = oldVertices[i];
-            for(int i=0; i<oldIndexCount; i++)
-                dest.GetIndices()[i] = oldIndices[i];
-
-            // Append new vertices
-            for (int i = 0; i < src.VertexCount; i++)
-                dest.GetVertices()[oldVertexCount + i] = src.GetVertices()[i];
-
-            // Append new indices (each offset by oldVertexCount)
-            for (int i = 0; i < src.IndexCount; i++)
-            {
-                Index idx = src.GetIndices()[i];
-                // If Index is an integer type, just add oldVertexCount:
-                idx.I[0] += oldVertexCount;
-                idx.I[1] += oldVertexCount;
-                idx.I[2] += oldVertexCount; 
-                dest.GetIndices()[oldIndexCount + i] = idx;
-            }
-        };
-
-        // Return a copy of the mesh transformed by t
-        auto transformMesh = [&](Mesh& inMesh, const Transform& t) -> Mesh
+            Mesh mesh = PackupMeshes(elementList[i].uniqueID);
+            render.DrawMesh(mesh, 0, 0, shader);
+        }
+    }
+    G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)
+    {
+        for (int i = 0; i < (int)elementList.size(); i++)
         {
-            Mesh outMesh;
-            outMesh.Create(inMesh.VertexCount, inMesh.IndexCount);
-
-            // Copy indices as-is
-            for (int i = 0; i < inMesh.IndexCount; i++)
-                outMesh.GetIndices()[i] = inMesh.GetIndices()[i];
-
-            // Apply matrix transform to each vertex
-            glm::mat4 mat = TransformToMatrix(t);
-            for (int i = 0; i < inMesh.VertexCount; i++)
+            if (elementList[i].uniqueID == uniqueID)
             {
-                Vertex v = inMesh.GetVertices()[i];
-                glm::vec4 pos = mat * glm::vec4(v.x, v.y, v.z, 1.0f);
-                v.x = pos.x; 
-                v.y = pos.y; 
-                v.z = pos.z;
-                outMesh.GetVertices()[i] = v;
+                return &elementList[i];
             }
-            return outMesh;
-        };
-
-        // Recursive function to gather child meshes
-        std::function<Mesh(G_UIelement*, const Transform&)> gather =
-        [&](G_UIelement* elem, const Transform& parentT) -> Mesh
-        {
-            // Combine transforms, build mesh
-            Transform combined = CombineTransforms(parentT, elem->transform);
-            Mesh current = transformMesh(elem->mesh, combined);
-
-            // Gather children
-            for(int i = 0; i < elem->childCount; i++)
-            {
-                Mesh childMesh = gather(elem->children[i], combined);
-                mergeMeshes(current, childMesh);
-            }
-            return current;
-        };
-
-        // Start recursion from root, using an identity transform
-        Transform rootT{};
-        rootT.position = glm::vec3(0.f);
-        rootT.rotation = glm::vec3(0.f);
-        rootT.scale    = glm::vec3(1.f);
-
-        return gather(root, rootT);
+        }
+        return NULL;
     }
 }

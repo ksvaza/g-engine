@@ -15,6 +15,16 @@ namespace Gengine
         mesh.Indices = NULL;
         mesh.VertexCount = 0;
         mesh.IndexCount = 0;
+        mesh.BoundingBox.x = 0.0f;
+        mesh.BoundingBox.y = 0.0f;
+        mesh.BoundingBox.z = 0.0f;
+        mesh.BoundingBox.width = 0.0f;
+        mesh.BoundingBox.height = 0.0f;
+        mesh.BoundingBox.depth = 0.0f;
+        mesh.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+        mesh.transform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+        mesh.transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+        mesh.colour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         return mesh;
     }
     void Mesh::Create(int vertexCount, int indexCount)
@@ -29,6 +39,21 @@ namespace Gengine
 
         BoundingBox = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
         transform = { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f) };
+    }
+    void Mesh::Recreate(int vertexCount, int indexCount)
+    {
+        if (Vertices && Indices)
+        {
+            VertexCount = vertexCount;
+            Vertices = (Vertex*)realloc(Vertices, sizeof(Vertex) * vertexCount);
+
+            IndexCount = indexCount;
+            Indices = (Index*)realloc(Indices, sizeof(Index) * indexCount);
+        }
+        else
+        {
+            Create(vertexCount, indexCount);
+        }
     }
     void Mesh::Delete()
     {
@@ -70,6 +95,14 @@ namespace Gengine
             Vertices[i].b = b;
             Vertices[i].a = a;
         }
+    }
+    void Mesh::SetColour(glm::vec4 colour)
+    {
+        this->colour = colour;
+    }
+    glm::vec4 Mesh::GetColour()
+    {
+        return colour;
     }
     void Mesh::Print()
     {
@@ -140,6 +173,14 @@ namespace Gengine
         Indices[0].I[0] = 0;
         Indices[0].I[1] = 2;
         Indices[0].I[2] = 1;
+
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            Vertices[i].r = 1.0f;
+            Vertices[i].g = 1.0f;
+            Vertices[i].b = 1.0f;
+            Vertices[i].a = 1.0f;
+        }
 
         mesh->Fill(Vertices, Indices);
         mesh->FillColour(1.0f, 0.5f, 0.2f, 1.0f);
@@ -271,6 +312,14 @@ namespace Gengine
             break;
         }
 
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            mesh->GetVertices()[i].r = 1.0f;
+            mesh->GetVertices()[i].g = 1.0f;
+            mesh->GetVertices()[i].b = 1.0f;
+            mesh->GetVertices()[i].a = 1.0f;
+        }
+
         return 0;
     }
     int MeshGenerator::CalculateBounds(Mesh* mesh)
@@ -297,6 +346,68 @@ namespace Gengine
         BoundingBox.depth = maxZ - minZ;
 
         mesh->SetBoundingBox(BoundingBox);
+        return 0;
+    }
+    int MeshGenerator::StichMesh(Mesh* base, Mesh* add)
+    {
+        Vertex* addVertices = add->GetVertices();
+        Index* addIndices = add->GetIndices();
+
+        int baseVertexCount = base->VertexCount;
+        int baseIndexCount = base->IndexCount;
+        base->Recreate(base->VertexCount + add->VertexCount, base->IndexCount + add->IndexCount);
+        Vertex* newVertices = base->GetVertices();
+        Index* newIndices = base->GetIndices();
+
+        for (int i = 0; i < add->VertexCount; i++)
+        {
+            newVertices[baseVertexCount + i] = addVertices[i];
+        }
+
+        for (int i = 0; i < add->IndexCount; i++)
+        {
+            newIndices[baseIndexCount + i] = addIndices[i];
+            for (int j = 0; j < 3; j++)
+            {
+                newIndices[baseIndexCount + i].I[j] += baseVertexCount;
+            }
+        }
+
+        return 0;
+    }
+    int MeshGenerator::AddMesh(Mesh* base, Mesh* add)
+    {
+        Vertex* addVertices = add->GetVertices();
+        Index* addIndices = add->GetIndices();
+
+        int baseVertexCount = base->VertexCount;
+        int baseIndexCount = base->IndexCount;
+        base->Recreate(base->VertexCount + add->VertexCount, base->IndexCount + add->IndexCount);
+        Vertex* newVertices = base->GetVertices();
+        Index* newIndices = base->GetIndices();
+
+        for (int i = 0; i < add->VertexCount; i++)
+        {
+            // Tranform
+            glm::vec4 vertex = glm::vec4(addVertices[i].x, addVertices[i].y, addVertices[i].z, 1.0f);
+            glm::mat4 transform = Gengine::TransformToMatrix(add->GetTransform());
+            vertex = transform * vertex;
+            glm::vec4 colour = add->GetColour();
+
+            // Add
+            Vertex newVertex = { vertex.x, vertex.y, vertex.z, addVertices[i].r * colour.r, addVertices[i].g * colour.g, addVertices[i].b * colour.b, addVertices[i].a * colour.a };
+            newVertices[baseVertexCount + i] = newVertex;
+        }
+
+        for (int i = 0; i < add->IndexCount; i++)
+        {
+            newIndices[baseIndexCount + i] = addIndices[i];
+            for (int j = 0; j < 3; j++)
+            {
+                newIndices[baseIndexCount + i].I[j] += baseVertexCount;
+            }
+        }
+
         return 0;
     }
 }        
