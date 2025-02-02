@@ -65,9 +65,11 @@ namespace Gengine
     private:
         std::vector<G_UIelement> elementList;
         std::vector<G_UIelement*> UI_buttonList;
+        std::vector<AABox> UI_buttonBounds;
         Mesh recursiveMeshAdder(G_UIelement* element);
         void recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
         void recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
+        static Transform recursiveTransformCombiner(G_UIelement* element);
     public:
         // G_UIelement basic functions
         static void CreateElement(G_UIelement* element, G_UIelementType type);
@@ -81,6 +83,8 @@ namespace Gengine
         static void AddButtonCallbacks(G_UIelement* element, void* onHoverIn, void* onHoverOut, void* onPress, void* onRelease);
         static void AddChild(G_UIelement* parent, G_UIelement* child);
         static void SortChildren(G_UIelement* parent);
+        static AABox CalculateFinalizedBounds(G_UIelement* element);
+
         // UI system functions
         void AddElement(G_UIelement element);
         void RemoveElement(intptr_t uniqueID);

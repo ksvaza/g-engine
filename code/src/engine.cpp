@@ -104,6 +104,7 @@ namespace Gengine
             float y = -((Input.Mouse.MousePosition.y - (Gwindow.Height / 2)) * 2) / (Gwindow.Height);
             basePtr->transform.position = glm::vec3(x, y, 0.0f);
             basePtr->transform.rotation = glm::vec3(0.0f, 0.0f, 90.0f);
+            basePtr->mesh.SetBoundingBox(Layout.CalculateFinalizedBounds(basePtr));
 
             Layout.DrawElements(Render, shader);
 

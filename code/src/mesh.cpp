@@ -324,28 +324,24 @@ namespace Gengine
     }
     int MeshGenerator::CalculateBounds(Mesh* mesh)
     {
-        Vertex* Vertices = mesh->GetVertices();
-        AABox BoundingBox = mesh->GetBoundingBox();
+        Vertex* verts = mesh->GetVertices();
+        AABox box = mesh->GetBoundingBox();
+        glm::mat4 m = TransformToMatrix(mesh->GetTransform());
 
-        float minX = 0.0f, minY = 0.0f, minZ = 0.0f;
-        float maxX = 0.0f, maxY = 0.0f, maxZ = 0.0f;
+        float minX = FLT_MAX, minY = FLT_MAX, minZ = FLT_MAX;
+        float maxX = -FLT_MAX, maxY = -FLT_MAX, maxZ = -FLT_MAX;
+
         for (int i = 0; i < mesh->VertexCount; i++)
         {
-            if (Vertices[i].x < minX) { minX = Vertices[i].x; }
-            if (Vertices[i].y < minY) { minY = Vertices[i].y; }
-            if (Vertices[i].z < minZ) { minZ = Vertices[i].z; }
-            if (Vertices[i].x > maxX) { maxX = Vertices[i].x; }
-            if (Vertices[i].y > maxY) { maxY = Vertices[i].y; }
-            if (Vertices[i].z > maxZ) { maxZ = Vertices[i].z; }
+            glm::vec4 p = m * glm::vec4(verts[i].x, verts[i].y, verts[i].z, 1.0f);
+            if (p.x < minX) { minX = p.x; } if (p.x > maxX) { maxX = p.x; }
+            if (p.y < minY) { minY = p.y; } if (p.y > maxY) { maxY = p.y; }
+            if (p.z < minZ) { minZ = p.z; } if (p.z > maxZ) { maxZ = p.z; }
         }
-        BoundingBox.x = minX;
-        BoundingBox.y = minY;
-        BoundingBox.z = minZ;
-        BoundingBox.width = maxX - minX;
-        BoundingBox.height = maxY - minY;
-        BoundingBox.depth = maxZ - minZ;
 
-        mesh->SetBoundingBox(BoundingBox);
+        box.x = minX; box.y = minY; box.z = minZ;
+        box.width = maxX - minX; box.height = maxY - minY; box.depth = maxZ - minZ;
+        mesh->SetBoundingBox(box);
         return 0;
     }
     int MeshGenerator::StichMesh(Mesh* base, Mesh* add)
@@ -391,7 +387,8 @@ namespace Gengine
             // Tranform
             glm::vec4 vertex = glm::vec4(addVertices[i].x, addVertices[i].y, addVertices[i].z, 1.0f);
             glm::mat4 transform = Gengine::TransformToMatrix(add->GetTransform());
-            vertex = transform * vertex;
+            glm::mat4 invBaseTransform = glm::inverse(Gengine::TransformToMatrix(base->GetTransform()));
+            vertex = invBaseTransform * transform * vertex;
             glm::vec4 colour = add->GetColour();
 
             // Add

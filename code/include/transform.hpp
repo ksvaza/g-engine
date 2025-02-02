@@ -9,6 +9,5 @@ namespace Gengine {
     }Transform;
 
     glm::mat4 TransformToMatrix(const Transform& t);
-
     Transform CombineTransforms(const Transform& parent, const Transform& child);
 }

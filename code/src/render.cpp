@@ -93,6 +93,9 @@ namespace Gengine
                 6, 7, 3
             };
 
+            shader.SetUniformMat4("uTransform", glm::mat4(1.0f));
+            shader.SetUniformVec4("uColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
             unsigned int VBO, VAO, EBO;
 
             glGenVertexArrays(1, &VAO);

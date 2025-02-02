@@ -8,6 +8,59 @@ using namespace std;
 
 namespace Gengine
 {
+    // Private functions
+    // ----------------------------------------------------------------
+
+    Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
+    {
+        Mesh mesh = element->mesh;
+        for (int i = 0; i < element->childCount; i++)
+        {
+            Mesh childMesh = recursiveMeshAdder(element->children[i]);
+            MeshGenerator::AddMesh(&mesh, &childMesh);
+        }
+        mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
+        return mesh;
+    }
+    void Glayout::recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    {
+        if (element->type == G_BUTTON)
+        {
+            buttonList->push_back(element);
+        }
+        for (int i = 0; i < element->childCount; i++)
+        {
+            recursiveAddButtons(element->children[i], buttonList);
+        }
+    }
+    void Glayout::recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    {
+        if (element->type == G_BUTTON)
+        {
+            for (int i = 0; i < (int)buttonList->size(); i++)
+            {
+                if ((*buttonList)[i]->uniqueID == element->uniqueID)
+                {
+                    buttonList->erase(buttonList->begin() + i);
+                    break;
+                }
+            }
+        }
+        for (int i = 0; i < element->childCount; i++)
+        {
+            recursiveRemoveButtons(element->children[i], buttonList);
+        }
+    }
+    Transform Glayout::recursiveTransformCombiner(G_UIelement* element)
+    {
+        Transform transform = element->transform;
+        if (element->parent)
+        {
+            transform = CombineTransforms(recursiveTransformCombiner(element->parent), transform);
+        }
+        return transform;
+    }
+
     // G_UIelement basic functions
     // ----------------------------------------------------------------
 
@@ -56,22 +109,6 @@ namespace Gengine
             }
             SortChildren(element->parent);
         }
-    }
-    void Glayout::SortChildren(G_UIelement* parent)
-    {
-        int16_t offset = 0;
-        for (int i = 0; i < parent->childCount; i++)
-        {
-            if (parent->children[i] == NULL)
-            {
-                offset++;
-            }
-            else
-            {
-                parent->children[i - offset] = parent->children[i];
-            }
-        }
-        parent->childCount -= offset;
     }
     void Glayout::AddAttribute(G_UIelement* element, G_UIelementAttribute attribute)
     {
@@ -129,39 +166,36 @@ namespace Gengine
         parent->children[parent->childCount] = child;
         parent->childCount++;
     }
+    void Glayout::SortChildren(G_UIelement* parent)
+    {
+        int16_t offset = 0;
+        for (int i = 0; i < parent->childCount; i++)
+        {
+            if (parent->children[i] == NULL)
+            {
+                offset++;
+            }
+            else
+            {
+                parent->children[i - offset] = parent->children[i];
+            }
+        }
+        parent->childCount -= offset;
+    }
+    AABox Glayout::CalculateFinalizedBounds(G_UIelement* element)
+    {
+        Transform transform = recursiveTransformCombiner(element);
+        Mesh mesh = element->mesh;
+        mesh.SetTransform(CombineTransforms(transform, mesh.GetTransform()));
+        MeshGenerator::CalculateBounds(&mesh);
+        AABox box = mesh.GetBoundingBox();
+        mesh.Delete();
+        return box;
+    }
 
     // UI system functions
     // ----------------------------------------------------------------
 
-    void Glayout::recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
-    {
-        if (element->type == G_BUTTON)
-        {
-            buttonList->push_back(element);
-        }
-        for (int i = 0; i < element->childCount; i++)
-        {
-            recursiveAddButtons(element->children[i], buttonList);
-        }
-    }
-    void Glayout::recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
-    {
-        if (element->type == G_BUTTON)
-        {
-            for (int i = 0; i < (int)buttonList->size(); i++)
-            {
-                if ((*buttonList)[i]->uniqueID == element->uniqueID)
-                {
-                    buttonList->erase(buttonList->begin() + i);
-                    break;
-                }
-            }
-        }
-        for (int i = 0; i < element->childCount; i++)
-        {
-            recursiveRemoveButtons(element->children[i], buttonList);
-        }
-    }
     void Glayout::AddElement(G_UIelement element)
     {
         elementList.push_back(element);
@@ -183,17 +217,6 @@ namespace Gengine
             }
         }
     }
-    Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
-    {
-        Mesh mesh = element->mesh;
-        for (int i = 0; i < element->childCount; i++)
-        {
-            Mesh childMesh = recursiveMeshAdder(element->children[i]);
-            MeshGenerator::AddMesh(&mesh, &childMesh);
-        }
-        mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
-        return mesh;
-    }
     Mesh Glayout::PackupMeshes(intptr_t uniqueID)
     {
         G_UIelement* root = NULL;
@@ -214,7 +237,7 @@ namespace Gengine
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             Mesh mesh = PackupMeshes(elementList[i].uniqueID);
-            render.DrawMesh(mesh, 0, 0, shader);
+            render.DrawMesh(mesh, 1, 1, shader);
         }
     }
     G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)
