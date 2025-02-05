@@ -62,22 +62,16 @@ namespace Gengine
         {
             AABox box = mesh.GetBoundingBox();
             float vertices[] = {
-                box.x, box.y, box.z,                                        // bottom front left
-                box.x + box.width, box.y, box.z,                            // bottom front right
-                box.x + box.width, box.y + box.height, box.z,               // top front right
-                box.x, box.y + box.height, box.z,                           // top front left
-                box.x, box.y, box.z + box.depth,                            // bottom back left
-                box.x + box.width, box.y, box.z + box.depth,                // bottom back right
-                box.x + box.width, box.y + box.height, box.z + box.depth,   // top back right
-                box.x, box.y + box.height, box.z + box.depth                // top back left
+                box.x, box.y, box.z, 1.0, 1.0, 1.0, 1.0,                                        // bottom front left
+                box.x + box.width, box.y, box.z, 1.0, 1.0, 1.0, 1.0,                            // bottom front right
+                box.x + box.width, box.y + box.height, box.z, 1.0, 1.0, 1.0, 1.0,               // top front right
+                box.x, box.y + box.height, box.z, 1.0, 1.0, 1.0, 1.0,                           // top front left
+                box.x, box.y, box.z + box.depth, 1.0, 1.0, 1.0, 1.0,                            // bottom back left
+                box.x + box.width, box.y, box.z + box.depth, 1.0, 1.0, 1.0, 1.0,                // bottom back right
+                box.x + box.width, box.y + box.height, box.z + box.depth, 1.0, 1.0, 1.0, 1.0,   // top back right
+                box.x, box.y + box.height, box.z + box.depth, 1.0, 1.0, 1.0, 1.0                // top back left
             };
             // scale and offset bounding box also
-            for (int i = 0; i < 8; i++)
-            {
-                vertices[i * 3 + 0] = vertices[i * 3 + 0] * mesh.GetTransform().scale.x + mesh.GetTransform().position.x;
-                vertices[i * 3 + 1] = vertices[i * 3 + 1] * mesh.GetTransform().scale.y + mesh.GetTransform().position.y;
-                vertices[i * 3 + 2] = vertices[i * 3 + 2] * mesh.GetTransform().scale.z + mesh.GetTransform().position.z;
-            }
             unsigned int indices[] = {
                 0, 1, 2,
                 2, 3, 0,
@@ -110,8 +104,11 @@ namespace Gengine
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
             glEnableVertexAttribArray(0);
+
+            glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+            glEnableVertexAttribArray(1);
 
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);

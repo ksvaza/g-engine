@@ -22,33 +22,39 @@ namespace Gengine
         mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
         return mesh;
     }
-    void Glayout::recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    void Glayout::recursiveAddAttribute(G_UIelement* element, G_UIattribType type)
     {
-        if (element->type == G_BUTTON)
+        for (int i = 0; i < element->attribCount; i++)
         {
-            buttonList->push_back(element);
+            if (element->attributes[i]->type == type)
+            {
+                UI_attributeMap[type].push_back(element);
+            }
         }
-        for (int i = 0; i < element->childCount; i++)
+        for (int j = 0; j < element->childCount; j++)
         {
-            recursiveAddButtons(element->children[i], buttonList);
+            recursiveAddAttribute(element->children[j], type);
         }
     }
-    void Glayout::recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList)
+    void Glayout::recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type)
     {
-        if (element->type == G_BUTTON)
+        for (int i = 0; i < element->attribCount; i++)
         {
-            for (int i = 0; i < (int)buttonList->size(); i++)
+            if (element->attributes[i]->type == type)
             {
-                if ((*buttonList)[i]->uniqueID == element->uniqueID)
+                for (int j = 0; j < (int)UI_attributeMap[type].size(); j++)
                 {
-                    buttonList->erase(buttonList->begin() + i);
-                    break;
+                    if (UI_attributeMap[type][j]->uniqueID == element->uniqueID)
+                    {
+                        UI_attributeMap[type].erase(UI_attributeMap[type].begin() + j);
+                        break;
+                    }
                 }
             }
         }
         for (int i = 0; i < element->childCount; i++)
         {
-            recursiveRemoveButtons(element->children[i], buttonList);
+            recursiveRemoveAttribute(element->children[i], type);
         }
     }
     Transform Glayout::recursiveTransformCombiner(G_UIelement* element)
@@ -149,6 +155,7 @@ namespace Gengine
         G_UIelementAttribute attribute;
         G_UIattribButton button;
         button.type = G_BUTTON_ATTRIB;
+        button.bounds = { 0.0, 0.0, 0.0, 0.0 };
         attribute.button = button;
         AddAttribute(element, attribute);
     }
@@ -199,7 +206,10 @@ namespace Gengine
     void Glayout::AddElement(G_UIelement element)
     {
         elementList.push_back(element);
-        recursiveAddButtons(&element, &UI_buttonList);
+        for (int i = 0; i < element.attribCount; i++)
+        {
+            recursiveAddAttribute(&element, element.attributes[i]->type);
+        }
     }
     void Glayout::RemoveElement(intptr_t uniqueID)
     {
@@ -212,7 +222,10 @@ namespace Gengine
                     DeleteElement(elementList[i].children[j]);
                 }
                 elementList.erase(elementList.begin() + i);
-                recursiveRemoveButtons(&elementList[i], &UI_buttonList);
+                for (int j = 0; j < (int)UI_attributeMap.size(); j++)
+                {
+                    recursiveRemoveAttribute(&elementList[i], (G_UIattribType)j);
+                }
                 break;
             }
         }
@@ -237,7 +250,8 @@ namespace Gengine
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             Mesh mesh = PackupMeshes(elementList[i].uniqueID);
-            render.DrawMesh(mesh, 1, 1, shader);
+            MeshGenerator::CalculateBounds(&mesh);
+            render.DrawMesh(mesh, 0, 1, shader);
         }
     }
     G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)

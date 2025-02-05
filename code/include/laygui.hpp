@@ -6,6 +6,7 @@
 #include <shader.hpp>
 #include <transform.hpp>
 #include <vector>
+#include <map>
 
 namespace Gengine
 {
@@ -35,6 +36,7 @@ namespace Gengine
 
     struct G_UIattribButton {
         G_UIattribType type = G_EMPTY_ATTRIB;
+        AABox bounds = { 0.0, 0.0, 0.0, 0.0 };
         void* onHoverIn = NULL;
         void* onHoverOut = NULL;
         void* onPress = NULL;
@@ -64,11 +66,13 @@ namespace Gengine
     {
     private:
         std::vector<G_UIelement> elementList;
-        std::vector<G_UIelement*> UI_buttonList;
-        std::vector<AABox> UI_buttonBounds;
+        //std::vector<G_UIelement*> UI_buttonList;
+        std::map<G_UIattribType, std::vector<G_UIelement*>> UI_attributeMap;
         Mesh recursiveMeshAdder(G_UIelement* element);
-        void recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
-        void recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
+        //void recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
+        //void recursiveRemoveButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);
+        void recursiveAddAttribute(G_UIelement* element, G_UIattribType type);
+        void recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type);
         static Transform recursiveTransformCombiner(G_UIelement* element);
     public:
         // G_UIelement basic functions
@@ -89,6 +93,7 @@ namespace Gengine
         void AddElement(G_UIelement element);
         void RemoveElement(intptr_t uniqueID);
         Mesh PackupMeshes(intptr_t uniqueID);
+        void UpdateAttributeMap();
         void DrawElements(Renderer render, Shader shader);
         G_UIelement* GetElementByUniqueID(intptr_t uniqueID);
         void Update();
