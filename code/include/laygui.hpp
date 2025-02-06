@@ -67,7 +67,7 @@ namespace Gengine
     {
     private:
         std::vector<G_UIelement> elementList;
-        //std::vector<G_UIelement*> UI_buttonList;
+        //std::map<int16_t // jāpārtaisa elementa unikalitātes un atrašanas sistēma, jo elementu galvenā saraksta elmentiem var mainīties adreses. iespējams vienkārši jāpārimplementē vector<G_UIelement> uz G_UIelement** un jāizmanto dinamiski pieaugošs unikālais ID
         std::map<G_UIattribType, std::vector<G_UIelement*>> UI_attributeMap;
         Mesh recursiveMeshAdder(G_UIelement* element);
         //void recursiveAddButtons(G_UIelement* element, std::vector<G_UIelement*>* buttonList);

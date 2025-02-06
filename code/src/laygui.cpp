@@ -166,6 +166,7 @@ namespace Gengine
             if (element->childCount == 0)
             {
                 Mesh mesh = element->mesh;
+                printf("Supermesh vertex count: %d\n", mesh.VertexCount);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 element->supermesh = mesh;
@@ -184,7 +185,9 @@ namespace Gengine
                         MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
                     }
                 }
+                printf("Vertex counts: %d +", mesh.VertexCount);
                 MeshGenerator::AddMesh(&mesh, &submesh);
+                printf(" %d = %d\n", mesh.VertexCount, submesh.VertexCount);
                 element->supermesh = submesh;
             }
         } else {
@@ -340,6 +343,7 @@ namespace Gengine
     // }
     void Glayout::DrawElements(Renderer render, Shader shader)
     {
+        printf("Element count: %d\n", (int)elementList.size());
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             if (elementList[i].visible)
@@ -374,6 +378,7 @@ namespace Gengine
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             CalculateSupermesh(&elementList[i], 1); // Calculate supermeshes
+            printf("Element %d supermesh vertex count: %d\n", i, elementList[i].supermesh.VertexCount);
         }
         return 0;
     }

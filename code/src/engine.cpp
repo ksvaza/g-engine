@@ -56,7 +56,6 @@ namespace Gengine
             element.transform = elementTransform;
         }
         Layout.AddElement(element);
-        G_UIelement* elementPtr = Layout.GetElementByUniqueID(element.uniqueID);
 
         G_UIelement base;
         {
@@ -85,11 +84,11 @@ namespace Gengine
             Layout.AddChild(&base, &child);
         }
         Layout.AddElement(base);
-        G_UIelement* basePtr = Layout.GetElementByUniqueID(base.uniqueID);
 
         Layout.Compile();
-        elementPtr->supermesh.Print();
-        basePtr->supermesh.Print();
+
+        G_UIelement* elementPtr = Layout.GetElementByUniqueID(element.uniqueID);
+        G_UIelement* basePtr = Layout.GetElementByUniqueID(base.uniqueID);
         
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
