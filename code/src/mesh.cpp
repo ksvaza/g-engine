@@ -128,6 +128,31 @@ namespace Gengine
             printf("{%d, %d, %d}\n", Indices[i].I[0], Indices[i].I[1], Indices[i].I[2]);
         }
     }
+    char Mesh::Equals(Mesh mesh)
+    {
+        if (VertexCount != mesh.VertexCount || IndexCount != mesh.IndexCount)
+        {
+            return 0;
+        }
+
+        for (int i = 0; i < VertexCount; i++)
+        {
+            if (Vertices[i].x != mesh.Vertices[i].x || Vertices[i].y != mesh.Vertices[i].y || Vertices[i].z != mesh.Vertices[i].z)
+            {
+                return 0;
+            }
+        }
+
+        for (int i = 0; i < IndexCount; i++)
+        {
+            if (Indices[i].I[0] != mesh.Indices[i].I[0] || Indices[i].I[1] != mesh.Indices[i].I[1] || Indices[i].I[2] != mesh.Indices[i].I[2])
+            {
+                return 0;
+            }
+        }
+
+        return 1;
+    }
     void Mesh::SetBoundingBox(AABox box)
     {
         BoundingBox = box;
@@ -403,6 +428,19 @@ namespace Gengine
             {
                 newIndices[baseIndexCount + i].I[j] += baseVertexCount;
             }
+        }
+
+        return 0;
+    }
+    int MeshGenerator::TransformMesh(Mesh* mesh, Transform transform)
+    {
+        Vertex* verts = mesh->GetVertices();
+        glm::mat4 m = TransformToMatrix(transform);
+
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            glm::vec4 p = m * glm::vec4(verts[i].x, verts[i].y, verts[i].z, 1.0f);
+            verts[i].x = p.x; verts[i].y = p.y; verts[i].z = p.z;
         }
 
         return 0;

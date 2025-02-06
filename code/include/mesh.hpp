@@ -64,6 +64,7 @@ namespace Gengine
         void SetColour(glm::vec4 colour);
         glm::vec4 GetColour();
         void Print();
+        char Equals(Mesh mesh);
 
         void SetBoundingBox(AABox box);
         AABox GetBoundingBox();
@@ -80,5 +81,6 @@ namespace Gengine
         static int CalculateBounds(Mesh* mesh);
         static int StichMesh(Mesh* base, Mesh* add);
         static int AddMesh(Mesh* base, Mesh* add);
+        static int TransformMesh(Mesh* mesh, Transform transform);
     };
 }

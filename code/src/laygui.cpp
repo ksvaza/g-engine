@@ -1,4 +1,5 @@
 #include "../include/laygui.hpp"
+#include <stdio.h>
 #include <render.hpp>
 #include <shader.hpp>
 #include <mesh.hpp>
@@ -11,17 +12,17 @@ namespace Gengine
     // Private functions
     // ----------------------------------------------------------------
 
-    Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
-    {
-        Mesh mesh = element->mesh;
-        for (int i = 0; i < element->childCount; i++)
-        {
-            Mesh childMesh = recursiveMeshAdder(element->children[i]);
-            MeshGenerator::AddMesh(&mesh, &childMesh);
-        }
-        mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
-        return mesh;
-    }
+    // Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
+    // {
+    //     Mesh mesh = element->mesh;
+    //     for (int i = 0; i < element->childCount; i++)
+    //     {
+    //         Mesh childMesh = recursiveMeshAdder(element->children[i]);
+    //         MeshGenerator::AddMesh(&mesh, &childMesh);
+    //     }
+    //     mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
+    //     return mesh;
+    // }
     void Glayout::recursiveAddAttribute(G_UIelement* element, G_UIattribType type)
     {
         for (int i = 0; i < element->attribCount; i++)
@@ -57,15 +58,15 @@ namespace Gengine
             recursiveRemoveAttribute(element->children[i], type);
         }
     }
-    Transform Glayout::recursiveTransformCombiner(G_UIelement* element)
-    {
-        Transform transform = element->transform;
-        if (element->parent)
-        {
-            transform = CombineTransforms(recursiveTransformCombiner(element->parent), transform);
-        }
-        return transform;
-    }
+    // Transform Glayout::recursiveTransformCombiner(G_UIelement* element)
+    // {
+    //     Transform transform = element->transform;
+    //     if (element->parent)
+    //     {
+    //         transform = CombineTransforms(recursiveTransformCombiner(element->parent), transform);
+    //     }
+    //     return transform;
+    // }
 
     // G_UIelement basic functions
     // ----------------------------------------------------------------
@@ -73,6 +74,7 @@ namespace Gengine
     void Glayout::CreateElement(G_UIelement* element, G_UIelementType type)
     {
         element->mesh = Mesh::Empty();
+        element->supermesh = Mesh::Empty();
         element->visible = 1;
         element->uniqueID = (intptr_t)element;
         element->type = type;
@@ -90,6 +92,7 @@ namespace Gengine
     void Glayout::DeleteElement(G_UIelement* element)
     {
         element->mesh.Delete();
+        element->supermesh.Delete();
         if (element->childCount > 0)
         {
             for (int i = 0; i < element->childCount; i++)
@@ -123,6 +126,13 @@ namespace Gengine
         *element->attributes[element->attribCount] = attribute;
         element->attribCount++;
     }
+    void Glayout::AddChild(G_UIelement* parent, G_UIelement* child)
+    {
+        parent->children = (G_UIelement**)realloc(parent->children, sizeof(G_UIelement*) * (parent->childCount + 1));
+        parent->children[parent->childCount] = child;
+        child->parent = parent;
+        parent->childCount++;
+    }
     G_UIelementAttribute* Glayout::GetAttributeByType(G_UIelement* element, G_UIattribType type)
     {
         for (int i = 0; i < element->attribCount; i++)
@@ -145,7 +155,97 @@ namespace Gengine
         }
         return 0;
     }
+    void Glayout::CalculateSupermesh(G_UIelement* element, char all) // all: 1 = calculate supermeshes for all childen, 0 = lazy calculation to take into account existing supermeshes
+    {
+        if (all)
+        {
+            for (int i = 0; i < element->childCount; i++)
+            {
+                CalculateSupermesh(element->children[i], 1);
+            }
+            if (element->childCount == 0)
+            {
+                Mesh mesh = element->mesh;
+                MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
+                element->mesh.SetTransform();
+                element->supermesh = mesh;
+            } else {
+                Mesh mesh = element->mesh;
+                MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
+                element->mesh.SetTransform();
+                Mesh submesh = Mesh::Empty();
+                submesh.SetTransform();
+                for (int i = 0; i < element->childCount; i++)
+                {
+                    if (!Mesh::Empty().Equals(element->children[i]->supermesh) && element->children[i]->visible)
+                    {
+                        Mesh childmesh = element->children[i]->supermesh;
+                        MeshGenerator::TransformMesh(&childmesh, element->children[i]->transform);
+                        MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
+                    }
+                }
+                MeshGenerator::AddMesh(&mesh, &submesh);
+                element->supermesh = submesh;
+            }
+        } else {
+            if (element->childCount == 0)
+            {
+                Mesh mesh = element->mesh;
+                MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
+                element->mesh.SetTransform();
+                element->supermesh = mesh;
+            } else {
+                Mesh mesh = element->mesh;
+                MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
+                element->mesh.SetTransform();
+                Mesh submesh = Mesh::Empty();
+                submesh.SetTransform();
+                for (int i = 0; i < element->childCount; i++)
+                {
+                    if (!Mesh::Empty().Equals(element->children[i]->supermesh) && element->children[i]->visible)
+                    {
+                        Mesh childmesh = element->children[i]->supermesh;
+                        MeshGenerator::TransformMesh(&childmesh, element->children[i]->transform);
+                        MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
+                    }
+                }
+                MeshGenerator::AddMesh(&mesh, &submesh);
+                element->supermesh = submesh;
+            }
+        }
+    }
+    AABox Glayout::CalculateRelativeBounds(G_UIelement* element, uint16_t depth)
+    {
+        Mesh mesh = element->supermesh;
+        MeshGenerator::TransformMesh(&mesh, element->transform);
+        G_UIelement* transformElement = element;
 
+        if (!depth) // no limit
+        {
+            while (transformElement->parent)
+            {
+                transformElement = transformElement->parent;
+                MeshGenerator::TransformMesh(&mesh, transformElement->transform);
+            }
+        } else
+        {
+            for (int i = 0; i < depth; i++)
+            {
+                if (transformElement->parent)
+                {
+                    transformElement = transformElement->parent;
+                    MeshGenerator::TransformMesh(&mesh, transformElement->transform);
+                } else {
+                    break;
+                }
+            }
+        }
+        MeshGenerator::CalculateBounds(&mesh);
+        AABox box = mesh.GetBoundingBox();
+        mesh.Delete();
+        return box;
+    }
+    
     // Assembled functions
     // ----------------------------------------------------------------
 
@@ -167,12 +267,6 @@ namespace Gengine
         attribute->button.onPress = onPress;
         attribute->button.onRelease = onRelease;
     }
-    void Glayout::AddChild(G_UIelement* parent, G_UIelement* child)
-    {
-        parent->children = (G_UIelement**)realloc(parent->children, sizeof(G_UIelement*) * (parent->childCount + 1));
-        parent->children[parent->childCount] = child;
-        parent->childCount++;
-    }
     void Glayout::SortChildren(G_UIelement* parent)
     {
         int16_t offset = 0;
@@ -189,16 +283,16 @@ namespace Gengine
         }
         parent->childCount -= offset;
     }
-    AABox Glayout::CalculateFinalizedBounds(G_UIelement* element)
-    {
-        Transform transform = recursiveTransformCombiner(element);
-        Mesh mesh = element->mesh;
-        mesh.SetTransform(CombineTransforms(transform, mesh.GetTransform()));
-        MeshGenerator::CalculateBounds(&mesh);
-        AABox box = mesh.GetBoundingBox();
-        mesh.Delete();
-        return box;
-    }
+    // AABox Glayout::CalculateFinalizedBounds(G_UIelement* element)
+    // {
+    //     Transform transform = recursiveTransformCombiner(element);
+    //     Mesh mesh = element->mesh;
+    //     mesh.SetTransform(CombineTransforms(transform, mesh.GetTransform()));
+    //     MeshGenerator::CalculateBounds(&mesh);
+    //     AABox box = mesh.GetBoundingBox();
+    //     mesh.Delete();
+    //     return box;
+    // }
 
     // UI system functions
     // ----------------------------------------------------------------
@@ -230,28 +324,38 @@ namespace Gengine
             }
         }
     }
-    Mesh Glayout::PackupMeshes(intptr_t uniqueID)
-    {
-        G_UIelement* root = NULL;
-        for (int i = 0; i < (int)elementList.size(); i++)
-        {
-            if (elementList[i].uniqueID == uniqueID)
-            {
-                root = &elementList[i];
-                break;
-            }
-        }
-        if (!root) { return Mesh::Empty(); }
-
-        return recursiveMeshAdder(root);
-    }
+    // Mesh Glayout::PackupMeshes(intptr_t uniqueID)
+    // {
+    //     G_UIelement* root = NULL;
+    //     for (int i = 0; i < (int)elementList.size(); i++)
+    //     {
+    //         if (elementList[i].uniqueID == uniqueID)
+    //         {
+    //             root = &elementList[i];
+    //             break;
+    //         }
+    //     }
+    //     if (!root) { return Mesh::Empty(); }
+    //     return recursiveMeshAdder(root);
+    // }
     void Glayout::DrawElements(Renderer render, Shader shader)
     {
         for (int i = 0; i < (int)elementList.size(); i++)
         {
-            Mesh mesh = PackupMeshes(elementList[i].uniqueID);
-            MeshGenerator::CalculateBounds(&mesh);
-            render.DrawMesh(mesh, 0, 1, shader);
+            if (elementList[i].visible)
+            {
+                Mesh mesh;
+                if (Mesh::Empty().Equals(elementList[i].supermesh))
+                {
+                    mesh = elementList[i].supermesh;
+                } else {
+                    mesh = elementList[i].mesh;
+                    MeshGenerator::TransformMesh(&mesh, elementList[i].mesh.GetTransform());
+                }
+                mesh.transform = elementList[i].transform;
+                render.DrawMesh(mesh, 0, 0, shader);
+            }
+            
         }
     }
     G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)
@@ -264,5 +368,13 @@ namespace Gengine
             }
         }
         return NULL;
+    }
+    int Glayout::Compile()
+    {
+        for (int i = 0; i < (int)elementList.size(); i++)
+        {
+            CalculateSupermesh(&elementList[i], 1); // Calculate supermeshes
+        }
+        return 0;
     }
 }
