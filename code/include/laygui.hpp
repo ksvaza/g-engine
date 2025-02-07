@@ -84,6 +84,7 @@ namespace Gengine
         static G_UIelementAttribute* GetAttributeByType(G_UIelement* element, G_UIattribType type);
         static int8_t HasAttribute(G_UIelement* element, G_UIattribType type);
         static void CalculateSupermesh(G_UIelement* element, char all);
+        static void RecalculateSupermesh(G_UIelement* element);
         static AABox CalculateRelativeBounds(G_UIelement* element, uint16_t depth);
         
         // Assembled functions

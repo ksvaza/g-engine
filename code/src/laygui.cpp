@@ -166,7 +166,6 @@ namespace Gengine
             if (element->childCount == 0)
             {
                 Mesh mesh = element->mesh;
-                printf("Supermesh vertex count: %d\n", mesh.VertexCount);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 element->supermesh = mesh;
@@ -185,9 +184,7 @@ namespace Gengine
                         MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
                     }
                 }
-                printf("Vertex counts: %d +", mesh.VertexCount);
                 MeshGenerator::AddMesh(&mesh, &submesh);
-                printf(" %d = %d\n", mesh.VertexCount, submesh.VertexCount);
                 element->supermesh = submesh;
             }
         } else {
@@ -217,13 +214,23 @@ namespace Gengine
             }
         }
     }
+    void Glayout::RecalculateSupermesh(G_UIelement* element)
+    {
+        CalculateSupermesh(element, 0);
+        G_UIelement* parent = element->parent;
+        while (parent)
+        {
+            CalculateSupermesh(parent, 0);
+            parent = parent->parent;
+        }
+    }
     AABox Glayout::CalculateRelativeBounds(G_UIelement* element, uint16_t depth)
     {
         Mesh mesh = element->supermesh;
         MeshGenerator::TransformMesh(&mesh, element->transform);
         G_UIelement* transformElement = element;
 
-        if (!depth) // no limit
+        if (depth < 0) // no limit
         {
             while (transformElement->parent)
             {
@@ -343,7 +350,6 @@ namespace Gengine
     // }
     void Glayout::DrawElements(Renderer render, Shader shader)
     {
-        printf("Element count: %d\n", (int)elementList.size());
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             if (elementList[i].visible)
@@ -351,15 +357,14 @@ namespace Gengine
                 Mesh mesh;
                 if (Mesh::Empty().Equals(elementList[i].supermesh))
                 {
-                    mesh = elementList[i].supermesh;
-                } else {
                     mesh = elementList[i].mesh;
                     MeshGenerator::TransformMesh(&mesh, elementList[i].mesh.GetTransform());
+                } else {
+                    mesh = elementList[i].supermesh;
                 }
                 mesh.transform = elementList[i].transform;
-                render.DrawMesh(mesh, 0, 0, shader);
+                render.DrawMesh(mesh, 0, 1, shader);
             }
-            
         }
     }
     G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)
@@ -378,6 +383,13 @@ namespace Gengine
         for (int i = 0; i < (int)elementList.size(); i++)
         {
             CalculateSupermesh(&elementList[i], 1); // Calculate supermeshes
+            printf("\nOriginal mesh:\n");
+            elementList[i].supermesh.Print();
+            Mesh temp = elementList[i].supermesh;
+            elementList[i].supermesh.SetBoundingBox(CalculateRelativeBounds(&elementList[i], 0)); // Calculate relative bounds
+            printf("\nRelative bounds:\n");
+            elementList[i].supermesh.Print();
+            printf("Are meshes equal after bound calculation: %d\n", temp.Equals(elementList[i].supermesh));
             printf("Element %d supermesh vertex count: %d\n", i, elementList[i].supermesh.VertexCount);
         }
         return 0;

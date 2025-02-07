@@ -105,15 +105,7 @@ namespace Gengine
             // Korrigieren die Mesh aus Mouse Position
             float x = ((Input.Mouse.MousePosition.x - (Gwindow.Width / 2)) * 2) / (Gwindow.Width);
             float y = -((Input.Mouse.MousePosition.y - (Gwindow.Height / 2)) * 2) / (Gwindow.Height);
-            //basePtr->transform.position = glm::vec3(x, y, 0.0f);
-            //basePtr->transform.rotation = glm::vec3(0.0f, 0.0f, rotation);
-            /*if (1)//(abs(basePtr->mesh.GetBoundingBox().width - basePtr->mesh.GetBoundingBox().height) <= 0.000001f)
-            {
-                rotation = 12.0f * TotalTime;
-            ///*} else { *//*printf("Boundingbox width: %f, height: %f\n", basePtr->mesh.GetBoundingBox().width, basePtr->mesh.GetBoundingBox().height); }*/
-            
-            shader.SetUniformMat4("uTransform", glm::mat4(1.0f));
-            shader.SetUniformVec4("uColour", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            basePtr->transform.position = glm::vec3(x, y, 0.0f);
             Layout.DrawElements(Render, shader);
 
             glfwSwapBuffers(window);
