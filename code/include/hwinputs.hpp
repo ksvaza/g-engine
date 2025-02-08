@@ -1,6 +1,7 @@
 #pragma once
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <winlib.hpp>
 #include <glm/glm.hpp>
 
 namespace Gengine
@@ -35,15 +36,19 @@ namespace Gengine
             // Functions
             static void SetTestMode(char mode);
             static void Update();
-            static void Initialise(GLFWwindow* window);
+            static void Initialise(GLFWwindow* window, Window* windowData);
             static void SetMouseStatus(GLFWwindow* window, GLenum status); // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
-            static glm::vec2 ScreenToWorldSpace(glm::vec2 screenPosition, glm::vec2 screenSize);
+            static glm::vec2 ConvertPixelToScreenSpace(glm::vec2 pixelPosition, glm::vec2 screenSize);
+            static glm::vec2 ConvertScreenToWorldSpace(glm::vec2 screenPosition, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+            static glm::vec2 ConvertPixelToWorldSpace(glm::vec2 pixelPosition, glm::vec2 screenSize, glm::mat4 viewMatrix, glm::mat4 projectionMatrix); 
         private:
             // Variables
             static int RESETTABLE_KEYS[_MAX_RESSETABLE_KEY_COUNT];
             static int RESETTABLE_KEY_COUNT;
             static glm::vec2 LAST_MOUSE_POSITION;
             static char TEST_MODE;
+            static char ReceivedMousePositionUpdate;
+            static Window* WindowData;
 
             static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
             static void CursorPositionCallback(GLFWwindow* window, double xpos, double ypos);

@@ -5,9 +5,9 @@
 
 namespace Gengine
 {
-    int Window::Width = 600;
-    int Window::Height = 600;
-    float Window::AspectRatio = 1.0f;
+    int Window::Width = 1.0;
+    int Window::Height = 1.0;
+    float Window::AspectRatio = 1.0;
 
     int Window::InitialiseWindow(GLFWwindow** window, int width, int height, const char* name)
     {
@@ -47,6 +47,9 @@ namespace Gengine
         }
 
         glViewport(0, 0, width, height);
+        Width = width;
+        Height = height;
+        AspectRatio = (float)width / (float)height;
 
         return 0;
     }

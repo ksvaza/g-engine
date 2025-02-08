@@ -450,9 +450,10 @@ namespace Gengine
             glm::mat4 invBaseTransform = glm::inverse(Gengine::TransformToMatrix(base->GetTransform()));
             vertex = invBaseTransform * transform * vertex;
             glm::vec4 colour = add->GetColour();
+            glm::vec4 baseColour = base->GetColour();
 
             // Add
-            Vertex newVertex = { vertex.x, vertex.y, vertex.z, addVertices[i].r * colour.r, addVertices[i].g * colour.g, addVertices[i].b * colour.b, addVertices[i].a * colour.a };
+            Vertex newVertex = { vertex.x, vertex.y, vertex.z, addVertices[i].r * colour.r / baseColour.r, addVertices[i].g * colour.g / baseColour.g, addVertices[i].b * colour.b / baseColour.b, addVertices[i].a * colour.a / baseColour.a };
             newVertices[baseVertexCount + i] = newVertex;
         }
 

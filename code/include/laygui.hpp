@@ -41,6 +41,7 @@ namespace Gengine
         char isActive = 1;
         char isHovered = 0;
         char isPressed = 0;
+        char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
     };
     union G_UIelementAttribute {
         G_UIattribType type = G_EMPTY_ATTRIB;
@@ -86,6 +87,7 @@ namespace Gengine
         static void AddChild(G_UIelement* parent, G_UIelement* child);
         static G_UIelementAttribute* GetAttributeByType(G_UIelement* element, G_UIattribType type);
         static int8_t HasAttribute(G_UIelement* element, G_UIattribType type);
+        static G_UIelement* GetChildByType(G_UIelement* element, G_UIelementType type);
         static void CalculateSupermesh(G_UIelement* element, char all);
         static void RecalculateSupermesh(G_UIelement* element);
         static AABox CalculateRelativeBounds(G_UIelement* element, uint16_t depth);
@@ -94,6 +96,9 @@ namespace Gengine
         static void CreateButton(G_UIelement* element);
         static int AddButtonCallbacks(G_UIelement* element, void (*onStateChange)(void*, G_UIattribButton), void (*onHoverIn)(void*), void (*onHoverOut)(void*), void (*onPress)(void*), void (*onRelease)(void*));
         static int AddButtonBounds(G_UIelement* element, AABox bounds);
+        static void CreateUIWindow(G_UIelement* element, G_UIelementAttribute** buttonAttribute, glm::vec2 position, glm::vec2 size, float borderWidth, float buttonHeight);
+        static int ResizeUIWindow(G_UIelement* element, glm::vec2 size, float borderWidth, float buttonHeight);
+        static int AddUIWindowColours(G_UIelement* element, glm::vec4 colour, glm::vec4 borderColour, glm::vec4 buttonColour);
         static void SortChildren(G_UIelement* parent);
 
         // UI system functions

@@ -1,5 +1,6 @@
 #include "../include/laygui.hpp"
 #include <stdio.h>
+#include <stdlib.h>
 #include <render.hpp>
 #include <shader.hpp>
 #include <mesh.hpp>
@@ -136,6 +137,17 @@ namespace Gengine
         }
         return 0;
     }
+    G_UIelement* Glayout::GetChildByType(G_UIelement* element, G_UIelementType type)
+    {
+        for (int16_t i = 0; i < element->childCount; i++)
+        {
+            if (element->children[i]->type == type)
+            {
+                return element->children[i];
+            }
+        }
+        return NULL;
+    }
     void Glayout::CalculateSupermesh(G_UIelement* element, char all) // all: 1 = calculate supermeshes for all childen, 0 = lazy calculation to take into account existing supermeshes
     {
         if (all)
@@ -149,26 +161,25 @@ namespace Gengine
                 Mesh mesh;
                 MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
-                element->mesh.SetTransform();
+                mesh.SetTransform();
                 element->supermesh = mesh;
             } else {
                 Mesh mesh;
                 MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
-                element->mesh.SetTransform();
-                Mesh submesh = Mesh::Empty();
-                submesh.SetTransform();
+                mesh.SetTransform();
                 for (int i = 0; i < element->childCount; i++)
                 {
                     if (!Mesh::Empty().Equals(element->children[i]->supermesh) && element->children[i]->visible)
                     {
-                        Mesh childmesh = element->children[i]->supermesh;
+                        Mesh childmesh;
+                        MeshGenerator::CopyMesh(&childmesh, &element->children[i]->supermesh);
                         MeshGenerator::TransformMesh(&childmesh, element->children[i]->transform);
-                        MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
+                        MeshGenerator::AddMesh(&mesh, &childmesh);
+                        childmesh.Delete();
                     }
                 }
-                MeshGenerator::AddMesh(&mesh, &submesh);
-                element->supermesh = submesh;
+                element->supermesh = mesh;
             }
         } else {
             if (element->childCount == 0)
@@ -176,26 +187,25 @@ namespace Gengine
                 Mesh mesh;
                 MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
-                element->mesh.SetTransform();
+                mesh.SetTransform();
                 element->supermesh = mesh;
             } else {
                 Mesh mesh;
                 MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
-                element->mesh.SetTransform();
-                Mesh submesh = Mesh::Empty();
-                submesh.SetTransform();
+                mesh.SetTransform();
                 for (int i = 0; i < element->childCount; i++)
                 {
                     if (!Mesh::Empty().Equals(element->children[i]->supermesh) && element->children[i]->visible)
                     {
-                        Mesh childmesh = element->children[i]->supermesh;
+                        Mesh childmesh;
+                        MeshGenerator::CopyMesh(&childmesh, &element->children[i]->supermesh);
                         MeshGenerator::TransformMesh(&childmesh, element->children[i]->transform);
-                        MeshGenerator::AddMesh(&submesh, &element->children[i]->supermesh);
+                        MeshGenerator::AddMesh(&mesh, &childmesh);
+                        childmesh.Delete();
                     }
                 }
-                MeshGenerator::AddMesh(&mesh, &submesh);
-                element->supermesh = submesh;
+                element->supermesh = mesh;
             }
         }
     }
@@ -254,6 +264,7 @@ namespace Gengine
         CreateElement(element, G_BUTTON);
         G_UIelementAttribute attribute;
         G_UIattribButton button;
+        for (int i = 0; i < _MAX_MOUSE_BUTTON_COUNT; i++) { button.pressedWith[i] = 0; }
         button.type = G_BUTTON_ATTRIB;
         button.bounds = { 0.0, 0.0, 0.0, 0.0 };
         attribute.button = button;
@@ -275,6 +286,71 @@ namespace Gengine
         G_UIelementAttribute* attribute = GetAttributeByType(element, G_BUTTON_ATTRIB);
         if (!attribute) { return -1; }
         attribute->button.bounds = bounds;
+        return 0;
+    }
+    void Glayout::CreateUIWindow(G_UIelement* element, G_UIelementAttribute** buttonAttribute, glm::vec2 position, glm::vec2 size, float borderWidth, float buttonHeight)
+    {
+        G_UIelement* buttonElement = (G_UIelement*)malloc(sizeof(G_UIelement));
+        G_UIelement* contentElement = (G_UIelement*)malloc(sizeof(G_UIelement));
+
+        Mesh windowMesh;
+        MeshGenerator::RegularShape(&windowMesh, G_RECTANGLE);
+        windowMesh.transform = NewTransform();
+        windowMesh.transform.scale = glm::vec3(size.x, size.y, 1.0);
+        windowMesh.SetColour(glm::vec4(0.2, 0.2, 0.2, 1.0));
+
+
+        CreateElement(element, G_PARENT);
+        element->mesh = windowMesh;
+        element->transform = NewTransform();
+        element->transform.position = glm::vec3(position.x, position.y, 0.0);
+
+        Mesh buttonMesh;
+        MeshGenerator::RegularShape(&buttonMesh, G_RECTANGLE);
+        buttonMesh.transform = NewTransform();
+        buttonMesh.transform.scale = glm::vec3(size.x - 2.0 * borderWidth, buttonHeight, 1.0);
+        buttonMesh.SetColour(glm::vec4(0.4, 0.4, 0.4, 1.0));
+
+        CreateButton(buttonElement);
+        AddButtonCallbacks(buttonElement, DefaultButtonStateChange, DefaultButtonHoverIn, DefaultButtonHoverOut, DefaultButtonPress, DefaultButtonRelease);
+        buttonElement->mesh = buttonMesh;
+        buttonElement->transform = NewTransform();
+        buttonElement->transform.position = glm::vec3(0.0, (size.y - buttonHeight) / 2 - borderWidth, 0.0);
+        *buttonAttribute = GetAttributeByType(buttonElement, G_BUTTON_ATTRIB);
+        AddChild(element, buttonElement);
+        AABox buttonBounds = CalculateRelativeBounds(buttonElement, -1);
+        AddButtonBounds(buttonElement, buttonBounds);
+
+
+        Mesh contentMesh;
+        MeshGenerator::RegularShape(&contentMesh, G_RECTANGLE);
+        contentMesh.transform = NewTransform();
+        contentMesh.transform.scale = glm::vec3(size.x - 2.0 * borderWidth, size.y - buttonHeight - 3.0 * borderWidth, 1.0);
+        contentMesh.SetColour(glm::vec4(0.9, 0.9, 0.9, 1.0));
+
+        CreateElement(contentElement, G_MESH);
+        contentElement->mesh = contentMesh;
+        contentElement->transform = NewTransform();
+        contentElement->transform.position = glm::vec3(0.0, -(buttonHeight + 3.0 * borderWidth) / 2.0 + borderWidth, 0.0);
+        AddChild(element, contentElement);
+    }
+    int Glayout::ResizeUIWindow(G_UIelement* element, glm::vec2 size, float borderWidth, float buttonHeight)
+    {
+        return 0;
+    }
+    int Glayout::AddUIWindowColours(G_UIelement* element, glm::vec4 colour, glm::vec4 borderColour, glm::vec4 buttonColour)
+    {
+
+        G_UIelement* contents = GetChildByType(element, G_MESH);
+        if (!contents) { return -1; }
+        contents->mesh.SetColour(colour);
+
+        element->mesh.SetColour(borderColour);
+
+        G_UIelement* button = GetChildByType(element, G_BUTTON);
+        if (!button) { return -1; }
+        button->mesh.SetColour(buttonColour);
+
         return 0;
     }
     void Glayout::SortChildren(G_UIelement* parent)
@@ -323,10 +399,7 @@ namespace Gengine
         UI_elementList[UI_elementCount] = element;
         UI_elementCount++;
         
-        for (int16_t i = 0; i < element->attribCount; i++)
-        {
-            recursiveAddAttribute(element, element->attributes[i]->type);
-        }
+        recursiveAddAttribute(element, G_BUTTON_ATTRIB);
     }
     void Glayout::RemoveElement(G_UIelement* element)
     {
@@ -374,7 +447,8 @@ namespace Gengine
                     mesh = UI_elementList[i]->supermesh;
                 }
                 mesh.transform = UI_elementList[i]->transform;
-                Render->DrawMesh(mesh, 0, 1, UIshader);
+                Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix);
+                //Render->DrawBoundingBox(mesh, UIshader, UIviewMatrix, UIprojectionMatrix);
             }
         }
     }
@@ -400,94 +474,103 @@ namespace Gengine
     }
     void Glayout::Update()
     {
-        // Starting with all the buttons
         for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
         {
             G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
-            G_UIelementAttribute* button = GetAttributeByType(element, G_BUTTON_ATTRIB);
-            if (!button) { printf("Button without a button attribute! AttribCount: %d\n", element->attribCount); continue; }
+            G_UIelementAttribute* attrib = GetAttributeByType(element, G_BUTTON_ATTRIB);
+            if (!attrib) { printf("Button without an attribute!\n"); continue; }
 
-            G_UIattribButton lastState = button->button;
-            if (!lastState.isActive) { continue; }
+            G_UIattribButton* button = &attrib->button;
+            // last state
+            G_UIattribButton laststate = *button;
 
-            char stateChanged = 0;
-            char hoverIn = 0;
-            char hoverOut = 0;
-            char press = 0;
-            char release = 0;
-            glm::vec2 mousePos = Input->ScreenToWorldSpace(Input->Mouse.MousePosition, glm::vec2(Gwindow->Width, Gwindow->Height));
+            if (!button->isActive) { printf("Inactive!\n"); continue; }
 
+            // Hover logic (unchanged)
+            glm::vec2 mousePos = Input->ConvertPixelToWorldSpace(Input->Mouse.MousePosition, glm::vec2(Gwindow->Width, Gwindow->Height), UIviewMatrix, UIprojectionMatrix);
             glm::mat4 transform = glm::mat4(1.0f);
             G_UIelement* parent = element;
-            do {
+            while (parent)
+            {
                 transform = TransformToMatrix(parent->transform);
                 parent = parent->parent;
-            } while (parent);
-
-            AABox Tbounds = button->button.bounds;
-            glm::vec4 bounds[4] = {
-                glm::vec4(Tbounds.x, Tbounds.y, 0.0f, 1.0f),
-                glm::vec4(Tbounds.x + Tbounds.width, Tbounds.y, 0.0f, 1.0f),
-                glm::vec4(Tbounds.x + Tbounds.width, Tbounds.y + Tbounds.height, 0.0f, 1.0f),
-                glm::vec4(Tbounds.x, Tbounds.y + Tbounds.height, 0.0f, 1.0f)
-            };
-            for (int j = 0; j < 4; j++)
-            {
-                bounds[j] = transform * bounds[j];
             }
-            Tbounds.x = bounds[0].x;
-            Tbounds.y = bounds[0].y;
-            Tbounds.width = bounds[1].x - bounds[0].x;
-            Tbounds.height = bounds[2].y - bounds[1].y;
 
-            glm::vec4 mousePosT = glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
+            mousePos = glm::inverse(transform) * glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
+            //printf("Mouse position: %f, %f; Bounds: %f, %f, %f, %f\n", mousePos.x, mousePos.y, button->bounds.x, button->bounds.y, button->bounds.width, button->bounds.height);
 
-            char isInBounds = PointInBounds(glm::vec2(mousePosT.x, -mousePosT.y), Tbounds);
-            char isPressed = Input->Mouse.MouseButton[GLFW_MOUSE_BUTTON_LEFT] && isInBounds;
+            //printf("Bounds: %f, %f, %f, %f ", button->bounds.x, button->bounds.y, button->bounds.width, button->bounds.height);
+            //printf("Mouse position: %f, %f ", mousePos.x, mousePos.y);
 
+            char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), button->bounds);
+            //printf("In bounds: %d\n", isInBounds);
+            char changed = 0;
+            
             if (isInBounds)
             {
-                button->button.isHovered = 1;
-                if (!lastState.isHovered)
+                if (!button->isHovered)
                 {
-                    stateChanged = 1;
-                    hoverIn = 1;
+                    if (button->onHoverIn) { button->onHoverIn(element); }
+                    changed = 1;
                 }
-            } else
+                button->isHovered = 1;
+            }
+            else
             {
-                button->button.isHovered = 0;
-                if (lastState.isHovered)
+                if (button->isHovered)
                 {
-                    stateChanged = 1;
-                    hoverOut = 1;
+                    if (button->onHoverOut) { button->onHoverOut(element); }
+                    changed = 1;
+                }
+                button->isHovered = 0;
+            }
+
+            // Press/release logic for each mouse button
+            for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++)
+            {
+                // Press any mouse button if hovered
+                if (Input->Mouse.MouseButtonDown[mb] && button->isHovered)
+                {
+                    if (!button->pressedWith[mb])
+                    {
+                        // If no other button was pressed, call onPress
+                        char noOtherPressed = 1;
+                        for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++)
+                        {
+                            if (mb2 != mb && button->pressedWith[mb2])
+                            {
+                                noOtherPressed = 0;
+                                break;
+                            }
+                        }
+                        button->pressedWith[mb] = 1;
+                        changed = 1;
+                        if (noOtherPressed)
+                        {
+                            button->isPressed = 1;
+                            if (button->onPress) { button->onPress(element); }
+                        }
+                    }
+                }
+
+                if (Input->Mouse.MouseButtonUp[mb])
+                {
+                    if (button->isPressed)
+                    {
+                        button->isPressed = 0;
+                        if (button->onRelease) { button->onRelease(element); }
+                    }
+                    if (button->pressedWith[mb])
+                    {
+                        button->pressedWith[mb] = 0;
+                        changed = 1;
+                    }
                 }
             }
 
-            if (isPressed)
+            if (changed)
             {
-                button->button.isPressed = 1;
-                if (!lastState.isPressed)
-                {
-                    stateChanged = 1;
-                    press = 1;
-                }
-            } else
-            {
-                button->button.isPressed = 0;
-                if (lastState.isPressed)
-                {
-                    stateChanged = 1;
-                    release = 1;
-                }
-            }
-
-            if (stateChanged)
-            {
-                if (button->button.onStateChange) { button->button.onStateChange(element, lastState); }
-                if (hoverIn && button->button.onHoverIn) { button->button.onHoverIn(element); }
-                if (hoverOut && button->button.onHoverOut) { button->button.onHoverOut(element); }
-                if (press && button->button.onPress) { button->button.onPress(element); }
-                if (release && button->button.onRelease) { button->button.onRelease(element); }
+                if (button->onStateChange) { button->onStateChange(element, laststate); }
             }
         }
     }
@@ -498,27 +581,30 @@ namespace Gengine
     void Glayout::DefaultButtonStateChange(void* element, G_UIattribButton laststate)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
-        G_UIattribButton button = GetAttributeByType(elementPtr, G_BUTTON_ATTRIB)->button;
-        printf("Button state change: %llx\n", elementPtr->uniqueID);
+        //G_UIattribButton button = GetAttributeByType(elementPtr, G_BUTTON_ATTRIB)->button;
+        //printf("Button state change: %llx\n", elementPtr->uniqueID);
+
+        Glayout::RecalculateSupermesh(elementPtr);
     }
     void Glayout::DefaultButtonHoverIn(void* element)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
-        elementPtr->supermesh.colour *= 2.0 / 3.0;
+        elementPtr->mesh.colour *= 9.0 / 10.0;
     }
     void Glayout::DefaultButtonHoverOut(void* element)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
-        elementPtr->supermesh.colour *= 3.0 / 2.0;
+        elementPtr->mesh.colour *= 10.0 / 9.0;
+        //                              
     }
     void Glayout::DefaultButtonPress(void* element)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
-        elementPtr->supermesh.colour *= 0.5;
+        elementPtr->mesh.colour *= 8.0 / 9.0;
     }
     void Glayout::DefaultButtonRelease(void* element)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
-        elementPtr->supermesh.colour *= 2.0;
+        elementPtr->mesh.colour *= 9.0 / 8.0;
     }
 }

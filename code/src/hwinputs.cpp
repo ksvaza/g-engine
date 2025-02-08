@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <winlib.hpp>
 #include <glm/glm.hpp>
 
 namespace Gengine
@@ -13,6 +14,8 @@ namespace Gengine
     int HWInputs::RESETTABLE_KEY_COUNT = 0;
     glm::vec2 HWInputs::LAST_MOUSE_POSITION(0.0f, 0.0f);
     char HWInputs::TEST_MODE = 0;
+    char HWInputs::ReceivedMousePositionUpdate = 0;
+    Window* HWInputs::WindowData = NULL;
 
     // Functions
     void HWInputs::SetTestMode(char mode)
@@ -35,9 +38,17 @@ namespace Gengine
             Mouse.MouseButtonDown[i] = 0;
             Mouse.MouseButtonUp[i] = 0;
         }
-        LAST_MOUSE_POSITION = Mouse.MousePosition;
+        if (ReceivedMousePositionUpdate)
+        {
+            Mouse.MouseDeltaPosition = Mouse.MousePosition - LAST_MOUSE_POSITION;
+            LAST_MOUSE_POSITION = Mouse.MousePosition;
+            ReceivedMousePositionUpdate = 0;
+        } else
+        {
+            Mouse.MouseDeltaPosition = glm::vec2(0.0f, 0.0f);
+        }
     }
-    void HWInputs::Initialise(GLFWwindow* window)
+    void HWInputs::Initialise(GLFWwindow* window, Window* windowData)
     {
         // Set all keys to 0
         for (int i = 0; i < _MAX_KEY_COUNT; i++)
@@ -72,14 +83,26 @@ namespace Gengine
 
         // vajag
         if (glfwRawMouseMotionSupported()) { glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE); }
+
+        WindowData = windowData;
     }
     void HWInputs::SetMouseStatus(GLFWwindow* window, GLenum status)
     {
         glfwSetInputMode(window, GLFW_CURSOR, status);
     }
-    glm::vec2 HWInputs::ScreenToWorldSpace(glm::vec2 screenPosition, glm::vec2 screenSize)
+    glm::vec2 HWInputs::ConvertPixelToScreenSpace(glm::vec2 pixelPosition, glm::vec2 screenSize)
     {
-        return glm::vec2((screenPosition.x - (screenSize.x / 2)) * 2 / screenSize.x, (screenPosition.y - (screenSize.y / 2)) * 2 / screenSize.y);
+        return glm::vec2((pixelPosition.x - (screenSize.x / 2)) * 2 / screenSize.x, (pixelPosition.y - (screenSize.y / 2)) * 2 / screenSize.y);
+    }
+    glm::vec2 HWInputs::ConvertScreenToWorldSpace(glm::vec2 screenPosition, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+    {
+        glm::vec4 screenPos = glm::vec4(screenPosition, 0.0f, 1.0f);
+        glm::vec4 worldPos = glm::inverse(projectionMatrix * viewMatrix) * screenPos;
+        return glm::vec2(worldPos.x, worldPos.y);
+    }
+    glm::vec2 HWInputs::ConvertPixelToWorldSpace(glm::vec2 pixelPosition, glm::vec2 screenSize, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+    {
+        return ConvertScreenToWorldSpace(ConvertPixelToScreenSpace(pixelPosition, screenSize), viewMatrix, projectionMatrix);
     }
 
     // Callbacks
@@ -101,9 +124,8 @@ namespace Gengine
     }
     void HWInputs::CursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
     {
-        Mouse.MousePosition = glm::vec2((float)xpos, (float)ypos);
-        Mouse.MouseDeltaPosition = Mouse.MousePosition - LAST_MOUSE_POSITION;   
-        LAST_MOUSE_POSITION = Mouse.MousePosition;
+        Mouse.MousePosition = glm::vec2((float)xpos, WindowData->Height - (float)ypos);
+        ReceivedMousePositionUpdate = 1;
     }
     void HWInputs::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     {
