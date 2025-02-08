@@ -39,6 +39,8 @@ namespace Gengine
         G_STAR = 0x21
     }Gshape;
 
+    char PointInBounds(glm::vec2 point, AABox bounds);
+
     class Mesh
     {
     private:
@@ -79,6 +81,7 @@ namespace Gengine
         static int HelloTriangle(Mesh* mesh);
         static int RegularShape(Mesh* mesh, Gshape shape);
         static int CalculateBounds(Mesh* mesh);
+        static int CopyMesh(Mesh* destinaton, Mesh* source);
         static int StichMesh(Mesh* base, Mesh* add);
         static int AddMesh(Mesh* base, Mesh* add);
         static int TransformMesh(Mesh* mesh, Transform transform);

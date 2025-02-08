@@ -3,6 +3,7 @@
 #include <render.hpp>
 #include <shader.hpp>
 #include <mesh.hpp>
+#include <hwinputs.hpp>
 #include <glm/glm.hpp>
 
 using namespace std;
@@ -12,17 +13,6 @@ namespace Gengine
     // Private functions
     // ----------------------------------------------------------------
 
-    // Mesh Glayout::recursiveMeshAdder(G_UIelement* element)
-    // {
-    //     Mesh mesh = element->mesh;
-    //     for (int i = 0; i < element->childCount; i++)
-    //     {
-    //         Mesh childMesh = recursiveMeshAdder(element->children[i]);
-    //         MeshGenerator::AddMesh(&mesh, &childMesh);
-    //     }
-    //     mesh.SetTransform(CombineTransforms(element->transform, mesh.GetTransform()));
-    //     return mesh;
-    // }
     void Glayout::recursiveAddAttribute(G_UIelement* element, G_UIattribType type)
     {
         for (int i = 0; i < element->attribCount; i++)
@@ -58,15 +48,6 @@ namespace Gengine
             recursiveRemoveAttribute(element->children[i], type);
         }
     }
-    // Transform Glayout::recursiveTransformCombiner(G_UIelement* element)
-    // {
-    //     Transform transform = element->transform;
-    //     if (element->parent)
-    //     {
-    //         transform = CombineTransforms(recursiveTransformCombiner(element->parent), transform);
-    //     }
-    //     return transform;
-    // }
 
     // G_UIelement basic functions
     // ----------------------------------------------------------------
@@ -165,12 +146,14 @@ namespace Gengine
             }
             if (element->childCount == 0)
             {
-                Mesh mesh = element->mesh;
+                Mesh mesh;
+                MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 element->supermesh = mesh;
             } else {
-                Mesh mesh = element->mesh;
+                Mesh mesh;
+                MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 Mesh submesh = Mesh::Empty();
@@ -190,12 +173,14 @@ namespace Gengine
         } else {
             if (element->childCount == 0)
             {
-                Mesh mesh = element->mesh;
+                Mesh mesh;
+                MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 element->supermesh = mesh;
             } else {
-                Mesh mesh = element->mesh;
+                Mesh mesh;
+                MeshGenerator::CopyMesh(&mesh, &element->mesh);
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 element->mesh.SetTransform();
                 Mesh submesh = Mesh::Empty();
@@ -226,28 +211,33 @@ namespace Gengine
     }
     AABox Glayout::CalculateRelativeBounds(G_UIelement* element, uint16_t depth)
     {
-        Mesh mesh = element->supermesh;
-        MeshGenerator::TransformMesh(&mesh, element->transform);
+        Mesh mesh;
+        if (Mesh::Empty().Equals(element->supermesh))
+        {
+            MeshGenerator::CopyMesh(&mesh, &element->mesh);
+            MeshGenerator::TransformMesh(&mesh, element->mesh.transform);
+        } else {
+            MeshGenerator::CopyMesh(&mesh, &element->supermesh);
+        }
+        mesh.SetTransform();
         G_UIelement* transformElement = element;
 
-        if (depth < 0) // no limit
+        if (depth < 0)
         {
             while (transformElement->parent)
             {
-                transformElement = transformElement->parent;
                 MeshGenerator::TransformMesh(&mesh, transformElement->transform);
+                transformElement = transformElement->parent;
             }
         } else
         {
-            for (int i = 0; i < depth; i++)
+            for (uint16_t i = 0; i < depth; i++)
             {
                 if (transformElement->parent)
                 {
-                    transformElement = transformElement->parent;
                     MeshGenerator::TransformMesh(&mesh, transformElement->transform);
-                } else {
-                    break;
-                }
+                    transformElement = transformElement->parent;
+                } else { break; }
             }
         }
         MeshGenerator::CalculateBounds(&mesh);
@@ -269,13 +259,23 @@ namespace Gengine
         attribute.button = button;
         AddAttribute(element, attribute);
     }
-    void Glayout::AddButtonCallbacks(G_UIelement* element, void* onHoverIn, void* onHoverOut, void* onPress, void* onRelease)
+    int Glayout::AddButtonCallbacks(G_UIelement* element, void (*onStateChange)(void*, G_UIattribButton), void (*onHoverIn)(void*), void (*onHoverOut)(void*), void (*onPress)(void*), void (*onRelease)(void*))
     {
         G_UIelementAttribute* attribute = GetAttributeByType(element, G_BUTTON_ATTRIB);
+        if (!attribute) { return -1; }
+        attribute->button.onStateChange = onStateChange;
         attribute->button.onHoverIn = onHoverIn;
         attribute->button.onHoverOut = onHoverOut;
         attribute->button.onPress = onPress;
         attribute->button.onRelease = onRelease;
+        return 0;
+    }
+    int Glayout::AddButtonBounds(G_UIelement* element, AABox bounds)
+    {
+        G_UIelementAttribute* attribute = GetAttributeByType(element, G_BUTTON_ATTRIB);
+        if (!attribute) { return -1; }
+        attribute->button.bounds = bounds;
+        return 0;
     }
     void Glayout::SortChildren(G_UIelement* parent)
     {
@@ -293,105 +293,232 @@ namespace Gengine
         }
         parent->childCount -= offset;
     }
-    // AABox Glayout::CalculateFinalizedBounds(G_UIelement* element)
-    // {
-    //     Transform transform = recursiveTransformCombiner(element);
-    //     Mesh mesh = element->mesh;
-    //     mesh.SetTransform(CombineTransforms(transform, mesh.GetTransform()));
-    //     MeshGenerator::CalculateBounds(&mesh);
-    //     AABox box = mesh.GetBoundingBox();
-    //     mesh.Delete();
-    //     return box;
-    // }
 
     // UI system functions
     // ----------------------------------------------------------------
 
-    void Glayout::AddElement(G_UIelement element)
+    void Glayout::SetUIshader(Shader shader)
     {
-        elementList.push_back(element);
-        for (int i = 0; i < element.attribCount; i++)
+        UIshader = shader;
+    }
+    void Glayout::SetUIviewMatrix(glm::mat4 viewMatrix)
+    {
+        UIviewMatrix = viewMatrix;
+    }
+    void Glayout::SetUIprojectionMatrix(glm::mat4 projectionMatrix)
+    {
+        UIprojectionMatrix = projectionMatrix;
+    }
+    void Glayout::SetInput(HWInputs* Input)
+    {
+        this->Input = Input;
+    }
+    void Glayout::SetWindow(Window* Gwindow)
+    {
+        this->Gwindow = Gwindow;
+    }
+    void Glayout::AddElement(G_UIelement* element)
+    {
+        UI_elementList = (G_UIelement**)realloc(UI_elementList, sizeof(G_UIelement*) * (UI_elementCount + 1));
+        UI_elementList[UI_elementCount] = element;
+        UI_elementCount++;
+        
+        for (int16_t i = 0; i < element->attribCount; i++)
         {
-            recursiveAddAttribute(&element, element.attributes[i]->type);
+            recursiveAddAttribute(element, element->attributes[i]->type);
         }
     }
-    void Glayout::RemoveElement(intptr_t uniqueID)
+    void Glayout::RemoveElement(G_UIelement* element)
     {
-        for (int i = 0; i < (int)elementList.size(); i++)
+        for (int i = 0; i < UI_elementCount; i++)
         {
-            if (elementList[i].uniqueID == uniqueID)
+            if (UI_elementList[i] == element)
             {
-                for (int j = 0; j < elementList[i].childCount; j++)
-                {
-                    DeleteElement(elementList[i].children[j]);
-                }
-                elementList.erase(elementList.begin() + i);
                 for (int j = 0; j < (int)UI_attributeMap.size(); j++)
                 {
-                    recursiveRemoveAttribute(&elementList[i], (G_UIattribType)j);
+                    recursiveRemoveAttribute(UI_elementList[i], (G_UIattribType)j);
                 }
+                UI_elementList[i] = NULL;
                 break;
             }
         }
-    }
-    // Mesh Glayout::PackupMeshes(intptr_t uniqueID)
-    // {
-    //     G_UIelement* root = NULL;
-    //     for (int i = 0; i < (int)elementList.size(); i++)
-    //     {
-    //         if (elementList[i].uniqueID == uniqueID)
-    //         {
-    //             root = &elementList[i];
-    //             break;
-    //         }
-    //     }
-    //     if (!root) { return Mesh::Empty(); }
-    //     return recursiveMeshAdder(root);
-    // }
-    void Glayout::DrawElements(Renderer render, Shader shader)
-    {
-        for (int i = 0; i < (int)elementList.size(); i++)
+
+        uint16_t offset = 0;
+        for (int i = 0; i < UI_elementCount; i++)
         {
-            if (elementList[i].visible)
+            if (UI_elementList[i] == NULL)
+            {
+                offset++;
+            }
+            else
+            {
+                UI_elementList[i - offset] = UI_elementList[i];
+            }
+        }
+        UI_elementCount -= offset;
+
+        UI_elementList = (G_UIelement**)realloc(UI_elementList, sizeof(G_UIelement*) * UI_elementCount);
+    }
+    void Glayout::DrawElements()
+    {
+        for (uint16_t i = 0; i < UI_elementCount; i++)
+        {
+            if (UI_elementList[i]->visible)
             {
                 Mesh mesh;
-                if (Mesh::Empty().Equals(elementList[i].supermesh))
+                if (Mesh::Empty().Equals(UI_elementList[i]->supermesh))
                 {
-                    mesh = elementList[i].mesh;
-                    MeshGenerator::TransformMesh(&mesh, elementList[i].mesh.GetTransform());
+                    mesh = UI_elementList[i]->mesh;
+                    MeshGenerator::TransformMesh(&mesh, UI_elementList[i]->mesh.GetTransform());
                 } else {
-                    mesh = elementList[i].supermesh;
+                    mesh = UI_elementList[i]->supermesh;
                 }
-                mesh.transform = elementList[i].transform;
-                render.DrawMesh(mesh, 0, 1, shader);
+                mesh.transform = UI_elementList[i]->transform;
+                Render->DrawMesh(mesh, 0, 1, UIshader);
             }
         }
     }
     G_UIelement* Glayout::GetElementByUniqueID(intptr_t uniqueID)
     {
-        for (int i = 0; i < (int)elementList.size(); i++)
+        for (uint16_t i = 0; i < UI_elementCount; i++)
         {
-            if (elementList[i].uniqueID == uniqueID)
+            if (UI_elementList[i]->uniqueID == uniqueID)
             {
-                return &elementList[i];
+                return UI_elementList[i];
             }
         }
         return NULL;
     }
     int Glayout::Compile()
     {
-        for (int i = 0; i < (int)elementList.size(); i++)
+        for (uint16_t i = 0; i < UI_elementCount; i++)
         {
-            CalculateSupermesh(&elementList[i], 1); // Calculate supermeshes
-            printf("\nOriginal mesh:\n");
-            elementList[i].supermesh.Print();
-            Mesh temp = elementList[i].supermesh;
-            elementList[i].supermesh.SetBoundingBox(CalculateRelativeBounds(&elementList[i], 0)); // Calculate relative bounds
-            printf("\nRelative bounds:\n");
-            elementList[i].supermesh.Print();
-            printf("Are meshes equal after bound calculation: %d\n", temp.Equals(elementList[i].supermesh));
-            printf("Element %d supermesh vertex count: %d\n", i, elementList[i].supermesh.VertexCount);
+            CalculateSupermesh(UI_elementList[i], 1); // Calculate supermeshes
+            UI_elementList[i]->supermesh.SetBoundingBox(CalculateRelativeBounds(UI_elementList[i], -1)); // Calculate relative bounds
         }
         return 0;
+    }
+    void Glayout::Update()
+    {
+        // Starting with all the buttons
+        for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
+        {
+            G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
+            G_UIelementAttribute* button = GetAttributeByType(element, G_BUTTON_ATTRIB);
+            if (!button) { printf("Button without a button attribute! AttribCount: %d\n", element->attribCount); continue; }
+
+            G_UIattribButton lastState = button->button;
+            if (!lastState.isActive) { continue; }
+
+            char stateChanged = 0;
+            char hoverIn = 0;
+            char hoverOut = 0;
+            char press = 0;
+            char release = 0;
+            glm::vec2 mousePos = Input->ScreenToWorldSpace(Input->Mouse.MousePosition, glm::vec2(Gwindow->Width, Gwindow->Height));
+
+            glm::mat4 transform = glm::mat4(1.0f);
+            G_UIelement* parent = element;
+            do {
+                transform = TransformToMatrix(parent->transform);
+                parent = parent->parent;
+            } while (parent);
+
+            AABox Tbounds = button->button.bounds;
+            glm::vec4 bounds[4] = {
+                glm::vec4(Tbounds.x, Tbounds.y, 0.0f, 1.0f),
+                glm::vec4(Tbounds.x + Tbounds.width, Tbounds.y, 0.0f, 1.0f),
+                glm::vec4(Tbounds.x + Tbounds.width, Tbounds.y + Tbounds.height, 0.0f, 1.0f),
+                glm::vec4(Tbounds.x, Tbounds.y + Tbounds.height, 0.0f, 1.0f)
+            };
+            for (int j = 0; j < 4; j++)
+            {
+                bounds[j] = transform * bounds[j];
+            }
+            Tbounds.x = bounds[0].x;
+            Tbounds.y = bounds[0].y;
+            Tbounds.width = bounds[1].x - bounds[0].x;
+            Tbounds.height = bounds[2].y - bounds[1].y;
+
+            glm::vec4 mousePosT = glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
+
+            char isInBounds = PointInBounds(glm::vec2(mousePosT.x, -mousePosT.y), Tbounds);
+            char isPressed = Input->Mouse.MouseButton[GLFW_MOUSE_BUTTON_LEFT] && isInBounds;
+
+            if (isInBounds)
+            {
+                button->button.isHovered = 1;
+                if (!lastState.isHovered)
+                {
+                    stateChanged = 1;
+                    hoverIn = 1;
+                }
+            } else
+            {
+                button->button.isHovered = 0;
+                if (lastState.isHovered)
+                {
+                    stateChanged = 1;
+                    hoverOut = 1;
+                }
+            }
+
+            if (isPressed)
+            {
+                button->button.isPressed = 1;
+                if (!lastState.isPressed)
+                {
+                    stateChanged = 1;
+                    press = 1;
+                }
+            } else
+            {
+                button->button.isPressed = 0;
+                if (lastState.isPressed)
+                {
+                    stateChanged = 1;
+                    release = 1;
+                }
+            }
+
+            if (stateChanged)
+            {
+                if (button->button.onStateChange) { button->button.onStateChange(element, lastState); }
+                if (hoverIn && button->button.onHoverIn) { button->button.onHoverIn(element); }
+                if (hoverOut && button->button.onHoverOut) { button->button.onHoverOut(element); }
+                if (press && button->button.onPress) { button->button.onPress(element); }
+                if (release && button->button.onRelease) { button->button.onRelease(element); }
+            }
+        }
+    }
+
+    // Static functions
+    // ----------------------------------------------------------------
+
+    void Glayout::DefaultButtonStateChange(void* element, G_UIattribButton laststate)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        G_UIattribButton button = GetAttributeByType(elementPtr, G_BUTTON_ATTRIB)->button;
+        printf("Button state change: %llx\n", elementPtr->uniqueID);
+    }
+    void Glayout::DefaultButtonHoverIn(void* element)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        elementPtr->supermesh.colour *= 2.0 / 3.0;
+    }
+    void Glayout::DefaultButtonHoverOut(void* element)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        elementPtr->supermesh.colour *= 3.0 / 2.0;
+    }
+    void Glayout::DefaultButtonPress(void* element)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        elementPtr->supermesh.colour *= 0.5;
+    }
+    void Glayout::DefaultButtonRelease(void* element)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        elementPtr->supermesh.colour *= 2.0;
     }
 }

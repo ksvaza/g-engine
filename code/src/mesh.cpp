@@ -59,6 +59,7 @@ namespace Gengine
     {
         if (Vertices) { free(Vertices); }
         if (Indices) { free(Indices); }
+        *this = Empty();
     }
     void Mesh::Fill(Vertex* vertices, Index* indices)
     {
@@ -174,6 +175,16 @@ namespace Gengine
     Transform Mesh::GetTransform()
     {
         return transform;
+    }
+
+    char PointInBounds(glm::vec2 point, AABox bounds)
+    {
+        if (point.x >= bounds.x && point.x <= bounds.x + bounds.width &&
+            point.y >= bounds.y && point.y <= bounds.y + bounds.height)
+        {
+            return 1;
+        }
+        return 0;
     }
 
     // MeshGenerator functions
@@ -367,6 +378,30 @@ namespace Gengine
         box.x = minX; box.y = minY; box.z = minZ;
         box.width = maxX - minX; box.height = maxY - minY; box.depth = maxZ - minZ;
         mesh->SetBoundingBox(box);
+        return 0;
+    }
+    int MeshGenerator::CopyMesh(Mesh* destinaton, Mesh* source)
+    {
+        destinaton->Recreate(source->VertexCount, source->IndexCount);
+        Vertex* destVerts = destinaton->GetVertices();
+        Vertex* sourceVerts = source->GetVertices();
+        Index* destIndices = destinaton->GetIndices();
+        Index* sourceIndices = source->GetIndices();
+
+        for (int i = 0; i < source->VertexCount; i++)
+        {
+            destVerts[i] = sourceVerts[i];
+        }
+
+        for (int i = 0; i < source->IndexCount; i++)
+        {
+            destIndices[i] = sourceIndices[i];
+        }
+
+        destinaton->SetColour(source->GetColour());
+        destinaton->SetBoundingBox(source->GetBoundingBox());
+        destinaton->SetTransform(source->GetTransform());
+
         return 0;
     }
     int MeshGenerator::StichMesh(Mesh* base, Mesh* add)

@@ -37,11 +37,11 @@ namespace Gengine
             static void Update();
             static void Initialise(GLFWwindow* window);
             static void SetMouseStatus(GLFWwindow* window, GLenum status); // GLFW_CURSOR_DISABLED, GLFW_CURSOR_HIDDEN, GLFW_CURSOR_NORMAL
+            static glm::vec2 ScreenToWorldSpace(glm::vec2 screenPosition, glm::vec2 screenSize);
         private:
             // Variables
             static int RESETTABLE_KEYS[_MAX_RESSETABLE_KEY_COUNT];
             static int RESETTABLE_KEY_COUNT;
-            static char RESETTABLE_MOUSE_BUTTON_COUNT;
             static glm::vec2 LAST_MOUSE_POSITION;
             static char TEST_MODE;
 

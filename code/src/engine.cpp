@@ -31,7 +31,10 @@ namespace Gengine
         shader.Read("shaders/UIshader_vertex.glsl", GL_VERTEX_SHADER);
         shader.Read("shaders/UIshader_fragment.glsl", GL_FRAGMENT_SHADER);
         shader.Compile();
-        shader.Use();
+
+        Layout.SetUIshader(shader);
+        Layout.SetInput(&Input);
+        Layout.SetWindow(&Gwindow);
 
         G_UIelement element;
         {
@@ -42,20 +45,19 @@ namespace Gengine
 
             Mesh mesh;
             MeshGen.RegularShape(&mesh, G_RECTANGLE);
-            MeshGen.CalculateBounds(&mesh);
             mesh.SetTransform(meshTransform);
             mesh.SetColour(glm::vec4(0.2f, 0.7f, 0.4f, 1.0f));
 
-            Transform elementTransform;
-            elementTransform.position = glm::vec3(-0.8f, -0.85f, 0.0f);
-            elementTransform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-            elementTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-
-            Layout.CreateElement(&element, G_MESH);
+            Layout.CreateButton(&element);
+            Layout.AddButtonCallbacks(&element, Layout.DefaultButtonStateChange, Layout.DefaultButtonHoverIn, Layout.DefaultButtonHoverOut, Layout.DefaultButtonPress, Layout.DefaultButtonRelease);
             element.mesh = mesh;
-            element.transform = elementTransform;
+            element.transform.position = glm::vec3(-0.8f, -0.85f, 0.0f);
+            element.transform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+            element.transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+            AABox bounds = Layout.CalculateRelativeBounds(&element, -1);
+            Layout.AddButtonBounds(&element, bounds);
         }
-        Layout.AddElement(element);
+        Layout.AddElement(&element);
 
         G_UIelement base;
         {
@@ -83,12 +85,9 @@ namespace Gengine
 
             Layout.AddChild(&base, &child);
         }
-        Layout.AddElement(base);
+        Layout.AddElement(&base);
 
         Layout.Compile();
-
-        G_UIelement* elementPtr = Layout.GetElementByUniqueID(element.uniqueID);
-        G_UIelement* basePtr = Layout.GetElementByUniqueID(base.uniqueID);
         
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
@@ -100,13 +99,14 @@ namespace Gengine
             Update(deltaTime);
 
             Render.Clear();
+            Layout.Update();
             Input.Update();
 
             // Korrigieren die Mesh aus Mouse Position
             float x = ((Input.Mouse.MousePosition.x - (Gwindow.Width / 2)) * 2) / (Gwindow.Width);
             float y = -((Input.Mouse.MousePosition.y - (Gwindow.Height / 2)) * 2) / (Gwindow.Height);
-            basePtr->transform.position = glm::vec3(x, y, 0.0f);
-            Layout.DrawElements(Render, shader);
+            base.transform.position = glm::vec3(x, y, 0.0f);
+            Layout.DrawElements();
 
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -115,13 +115,15 @@ namespace Gengine
             deltaTime = (float)glfwGetTime();
         }
 
-        // The code for termination is suspiciously slow, probably due to the recursive deletion of elements
-        // crashes instead of terminating
+        // The code for termination is suspiciously slow, probably due to the recursive deletion of elements // -- fixed
+        // crashes instead of terminating // -- fixed
         shader.Delete();
-        Layout.RemoveElement(element.uniqueID);
-        //Layout.RemoveElement(base.uniqueID);
+        Layout.RemoveElement(&element);
+        Layout.DeleteElement(&element);
+        Layout.RemoveElement(&base);
+        Layout.DeleteElement(&base);
 
-        // This does not print
+        // This does not print // -- fixed
         printf("Window closed after %f seconds\n", TotalTime);
 
         return 0;

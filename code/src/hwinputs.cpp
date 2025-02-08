@@ -11,7 +11,6 @@ namespace Gengine
     KeyboardInputs HWInputs::Keyboard;
     int HWInputs::RESETTABLE_KEYS[_MAX_RESSETABLE_KEY_COUNT];
     int HWInputs::RESETTABLE_KEY_COUNT = 0;
-    char HWInputs::RESETTABLE_MOUSE_BUTTON_COUNT = 0;
     glm::vec2 HWInputs::LAST_MOUSE_POSITION(0.0f, 0.0f);
     char HWInputs::TEST_MODE = 0;
 
@@ -31,14 +30,10 @@ namespace Gengine
             }
             RESETTABLE_KEY_COUNT = 0;
         }
-        if (RESETTABLE_MOUSE_BUTTON_COUNT > 0)
+        for (int i = 0; i < _MAX_MOUSE_BUTTON_COUNT; i++)
         {
-            for (int i = 0; i < RESETTABLE_MOUSE_BUTTON_COUNT; i++)
-            {
-                Mouse.MouseButtonDown[i] = 0;
-                Mouse.MouseButtonUp[i] = 0;
-            }
-            RESETTABLE_MOUSE_BUTTON_COUNT = 0;
+            Mouse.MouseButtonDown[i] = 0;
+            Mouse.MouseButtonUp[i] = 0;
         }
         LAST_MOUSE_POSITION = Mouse.MousePosition;
     }
@@ -82,7 +77,11 @@ namespace Gengine
     {
         glfwSetInputMode(window, GLFW_CURSOR, status);
     }
-    
+    glm::vec2 HWInputs::ScreenToWorldSpace(glm::vec2 screenPosition, glm::vec2 screenSize)
+    {
+        return glm::vec2((screenPosition.x - (screenSize.x / 2)) * 2 / screenSize.x, (screenPosition.y - (screenSize.y / 2)) * 2 / screenSize.y);
+    }
+
     // Callbacks
     void HWInputs::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
