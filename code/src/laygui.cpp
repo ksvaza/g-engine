@@ -222,10 +222,15 @@ namespace Gengine
     AABox Glayout::CalculateRelativeBounds(G_UIelement* element, uint16_t depth)
     {
         Mesh mesh;
+        /*Transform stackedTransform;
+        stackedTransform.position = glm::vec3(0.0, 0.0, 0.0);
+        stackedTransform.rotation = glm::vec3(0.0, 0.0, 0.0);
+        stackedTransform.scale = glm::vec3(1.0, 1.0, 1.0);*/
         if (Mesh::Empty().Equals(element->supermesh))
         {
             MeshGenerator::CopyMesh(&mesh, &element->mesh);
             MeshGenerator::TransformMesh(&mesh, element->mesh.transform);
+            //CombineTransforms(stackedTransform, element->mesh.transform);
         } else {
             MeshGenerator::CopyMesh(&mesh, &element->supermesh);
         }
@@ -237,6 +242,7 @@ namespace Gengine
             while (transformElement->parent)
             {
                 MeshGenerator::TransformMesh(&mesh, transformElement->transform);
+                //CombineTransforms(stackedTransform, transformElement->transform);
                 transformElement = transformElement->parent;
             }
         } else
@@ -246,10 +252,12 @@ namespace Gengine
                 if (transformElement->parent)
                 {
                     MeshGenerator::TransformMesh(&mesh, transformElement->transform);
+                    //CombineTransforms(stackedTransform, transformElement->transform);
                     transformElement = transformElement->parent;
                 } else { break; }
             }
         }
+        //MeshGenerator::TransformMesh(&mesh, stackedTransform);
         MeshGenerator::CalculateBounds(&mesh);
         AABox box = mesh.GetBoundingBox();
         mesh.Delete();

@@ -20,11 +20,13 @@ namespace Gengine
         G_EMPTY = 0x00,
         G_MESH = 0x01,
         G_BUTTON = 0x02,
-        G_PARENT = 0x03,
+        G_SLIDER = 0x03,
+        G_PARENT = 0x04,
     };
     enum G_UIattribType {
         G_EMPTY_ATTRIB = 0x00,
         G_BUTTON_ATTRIB = 0x01,
+        G_SLIDER_ATTRIB = 0x02,
     };
 
     // Structs and Unions
@@ -43,9 +45,27 @@ namespace Gengine
         char isPressed = 0;
         char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
     };
+    struct G_UIattribSlider {
+        G_UIattribType type = G_EMPTY_ATTRIB;
+        AABox bounds = { 0.0, 0.0, 0.0, 0.0 };
+        void (*onStateChange)(void*, G_UIattribSlider) = NULL;
+        void (*onHoverIn)(void*) = NULL;
+        void (*onHoverOut)(void*) = NULL;
+        void (*onPress)(void*) = NULL;
+        void (*onRelease)(void*) = NULL;
+        char isActive = 1;
+        char isHovered = 0;
+        char isPressed = 0;
+        char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
+        float minValue = 0.0;
+        float maxValue = 1.0;
+        float value = 0.0;
+        char orientation = 0;
+    };
     union G_UIelementAttribute {
         G_UIattribType type = G_EMPTY_ATTRIB;
         G_UIattribButton button;
+        G_UIattribSlider slider;
         G_UIelementAttribute() {}
         ~G_UIelementAttribute() {}
     };
