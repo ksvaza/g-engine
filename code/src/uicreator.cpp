@@ -1,5 +1,4 @@
 #include "../include/uicreator.hpp"
-#include <functional>
 
 namespace Gengine
 {
@@ -35,11 +34,12 @@ namespace Gengine
         slider.onStateChange = onStateChangeCallback;
         slider.onPress = onPressCallback;
         slider.onRelease = onReleaseCallback;
-        slider.minValue = minValue;
-        slider.maxValue = maxValue;
-        slider.value = minValue;
-        slider.orientation = orientation;
+        this->minValue = minValue;
+        this->maxValue = maxValue;
+        this->value = minValue;
+        this->orientation = orientation;
         attribute.slider = slider;
+        attribute.slider.slider = this;
         Glayout::AddAttribute(knobElement, attribute);
         sliderAttribute = Glayout::GetAttributeByType(knobElement, G_SLIDER_ATTRIB);
         knobElement->mesh = knobMesh;
@@ -62,6 +62,18 @@ namespace Gengine
         sliderAttribute->slider.bounds = knobBounds;
         return 0;
     }
+    void GUI_slider::updateKnobPosition()
+    {
+        glm::vec2 windowSize = glm::vec2(referenceLayout->Gwindow->Width, referenceLayout->Gwindow->Height);
+        glm::vec3 deltaMouseWorldPos = glm::vec3(HWInputs::ConvertPixelToWorldSpace(HWInputs::Mouse.MouseDeltaPosition, windowSize, referenceLayout->UIviewMatrix, referenceLayout->UIprojectionMatrix), 0.0);
+        knobElement->transform.position += deltaMouseWorldPos;
+        return;
+    }
+    void GUI_slider::updateKnobColour()
+    {
+        return;
+    }
+    
     void GUI_slider::onHoverInCallback(void *element)
     {
         GUI_slider* sliderPtr = (GUI_slider*)element;
@@ -79,6 +91,7 @@ namespace Gengine
         GUI_slider* sliderPtr = (GUI_slider*)element;
         G_UIelement* knobElementPtr = sliderPtr->knobElement;
         knobElementPtr->mesh.colour *= 9.0 / 10.0;
+        sliderPtr->updateKnobPosition();
     }
     void GUI_slider::onReleaseCallback(void *element)
     {
@@ -86,10 +99,27 @@ namespace Gengine
         G_UIelement* knobElementPtr = sliderPtr->knobElement;
         knobElementPtr->mesh.colour *= 10.0 / 9.0;
     }
-
     void GUI_slider::onStateChangeCallback(void *element, G_UIattribSlider laststate)
     {
-        //GUI_slider* knob = (GUI_slider*)element;
         // Your callback implementation here
+        GUI_slider* sliderPtr = (GUI_slider*)element;
+        sliderPtr->updateKnobColour();
+    }
+    void GUI_slider::SetReferenceLayout(Glayout *layout)
+    {
+        referenceLayout = layout;
+    }
+    void GUI_slider::AddToLayout()
+    {
+        referenceLayout->AddElement(railElement);
+    }
+    void GUI_slider::RemoveFromLayout()
+    {
+        referenceLayout->RemoveElement(railElement);
+    }
+    void GUI_slider::Delete()
+    {
+        Glayout::DeleteElement(railElement);
+        Glayout::DeleteElement(knobElement);
     }
 }

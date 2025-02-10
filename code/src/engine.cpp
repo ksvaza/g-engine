@@ -8,6 +8,7 @@
 #include <mesh.hpp>
 #include <shader.hpp>
 #include <laygui.hpp>
+#include <uicreator.hpp>
 
 namespace Gengine
 {
@@ -84,13 +85,9 @@ namespace Gengine
         // Layout.AddElement(&wElement);
         G_UIelement wElement;
         G_UIelementAttribute* wElementButton;
-        Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(800.0, 600.0), 10.0, 30.0);
-        //Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.6, 0.7, 0.1, 1.0));
+        Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(1200.0, 800.0), 2.0, 50.0);
+        Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
         Layout.AddElement(&wElement);
-
-        // print wElementButton's button bounds
-        Transform fT = wElement.transform;
-        printf("Button bounds: %f, %f, %f, %f\n", wElementButton->button.bounds.x, wElementButton->button.bounds.y, wElementButton->button.bounds.width, wElementButton->button.bounds.height);
 
         G_UIelement element;
         G_UIelementAttribute* elementButton;
@@ -117,7 +114,7 @@ namespace Gengine
         G_UIelement base;
         {
             Layout.CreateElement(&base, G_PARENT);
-            base.visible = 0;
+            base.visible = 1;
             base.transform.position = glm::vec3(0.0, 0.0, 0.0);
             base.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
             base.transform.scale = glm::vec3(1.0, 1.0, 1.0);
@@ -140,11 +137,16 @@ namespace Gengine
 
             Layout.AddChild(&base, &child);
         }
-        //Layout.AddElement(&base);
+        Layout.AddElement(&base);
+
+        GUI_slider slider;
+        slider.Create(0.0, 1.0, GUI_HORIZONTAL, glm::vec2(200.0, 20.0), glm::vec2(20.0, 20.0), glm::vec2(960.0, 540.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
+        slider.SetReferenceLayout(&Layout);
+        slider.AddToLayout();
 
         Layout.Compile();
 
-        wElement.supermesh.Print();
+        //wElement.supermesh.Print();
         
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
@@ -182,10 +184,10 @@ namespace Gengine
         // The code for termination is suspiciously slow, probably due to the recursive deletion of elements // -- fixed
         // crashes instead of terminating // -- fixed
         shader.Delete();
-        //Layout.RemoveElement(&element);
-        //Layout.DeleteElement(&element);
-        ///Layout.RemoveElement(&base);
-        //Layout.DeleteElement(&base);
+        Layout.RemoveElement(&element);
+        Layout.DeleteElement(&element);
+        Layout.RemoveElement(&base);
+        Layout.DeleteElement(&base);
         Layout.RemoveElement(&wElement);
         Layout.DeleteElement(&wElement);
 

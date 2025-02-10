@@ -57,10 +57,7 @@ namespace Gengine
         char isHovered = 0;
         char isPressed = 0;
         char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
-        float minValue = 0.0;
-        float maxValue = 1.0;
-        float value = 0.0;
-        char orientation = 0;
+        void* slider = NULL;
     };
     union G_UIelementAttribute {
         G_UIattribType type = G_EMPTY_ATTRIB;
@@ -92,14 +89,14 @@ namespace Gengine
 
         void recursiveAddAttribute(G_UIelement* element, G_UIattribType type);
         void recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type);
-
+    public:
         Shader UIshader;
         glm::mat4 UIviewMatrix;
         glm::mat4 UIprojectionMatrix;
         HWInputs* Input;
         Window* Gwindow;
         Renderer* Render;
-    public:
+    
         // G_UIelement basic functions
         static void CreateElement(G_UIelement* element, G_UIelementType type);
         static void DeleteElement(G_UIelement* element);

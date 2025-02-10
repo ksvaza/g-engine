@@ -586,14 +586,6 @@ namespace Gengine
     // Static functions
     // ----------------------------------------------------------------
 
-    void Glayout::DefaultButtonStateChange(void* element, G_UIattribButton laststate)
-    {
-        G_UIelement* elementPtr = (G_UIelement*)element;
-        //G_UIattribButton button = GetAttributeByType(elementPtr, G_BUTTON_ATTRIB)->button;
-        //printf("Button state change: %llx\n", elementPtr->uniqueID);
-
-        Glayout::RecalculateSupermesh(elementPtr);
-    }
     void Glayout::DefaultButtonHoverIn(void* element)
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
@@ -614,5 +606,13 @@ namespace Gengine
     {
         G_UIelement* elementPtr = (G_UIelement*)element;
         elementPtr->mesh.colour *= 9.0 / 8.0;
+    }
+    void Glayout::DefaultButtonStateChange(void* element, G_UIattribButton laststate)
+    {
+        G_UIelement* elementPtr = (G_UIelement*)element;
+        //G_UIattribButton button = GetAttributeByType(elementPtr, G_BUTTON_ATTRIB)->button;
+        //printf("Button state change: %llx\n", elementPtr->uniqueID);
+
+        Glayout::RecalculateSupermesh(elementPtr);
     }
 }
