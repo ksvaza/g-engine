@@ -44,6 +44,7 @@ namespace Gengine
         char isHovered = 0;
         char isPressed = 0;
         char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
+        void* button = NULL;
     };
     struct G_UIattribSlider {
         G_UIattribType type = G_EMPTY_ATTRIB;
@@ -53,6 +54,7 @@ namespace Gengine
         void (*onHoverOut)(void*) = NULL;
         void (*onPress)(void*) = NULL;
         void (*onRelease)(void*) = NULL;
+        void (*onPositionUpdate)(void*) = NULL;
         char isActive = 1;
         char isHovered = 0;
         char isPressed = 0;

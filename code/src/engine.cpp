@@ -40,55 +40,45 @@ namespace Gengine
         glm::mat4 projectionMatrix = OrthographicMatrix(0.0f, 1920.0f, 0.0f, 1080.0f, -1.0f, 1.0f);
         Layout.SetUIviewMatrix(viewMatrix);
         Layout.SetUIprojectionMatrix(projectionMatrix);
+        
+        //G_UIelement wElement;
+        //G_UIelementAttribute* wElementButton;
+        //Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(1200.0, 800.0), 2.0, 50.0);
+        //Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
+        G_UIelement leftPanel;
+        {
+            Mesh leftPanelMesh;
+            MeshGen.RegularShape(&leftPanelMesh, G_RECTANGLE);
+            leftPanelMesh.transform = NewTransform();
+            leftPanelMesh.transform.position = glm::vec3(0.0, /*44*/0.0, 0.0);
+            leftPanelMesh.transform.scale = glm::vec3(400.0, /*200.0*/1080.0, 1.0);
+            leftPanelMesh.SetColour(glm::vec4(0.5, 0.5, 0.5, 1.0));
 
-        // UI window
-        // G_UIelement wElement;
-        // G_UIelement bElement;
-        // G_UIelement cElement;
-        // G_UIelementAttribute* wElementButton;
-        // {
-        //     Mesh wMesh;
-        //     MeshGen.RegularShape(&wMesh, G_RECTANGLE);
-        //     wMesh.transform = NewTransform(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(400.0, 600.0, 1.0));
-        //     wMesh.SetColour(glm::vec4(0.2, 0.2, 0.2, 1.0));
+            Layout.CreateElement(&leftPanel, G_PARENT);
+            leftPanel.mesh = leftPanelMesh;
+            leftPanel.transform = NewTransform();
+            leftPanel.transform.position = glm::vec3(200.0, 540.0, 0.0);
+        }
 
-        //     Layout.CreateElement(&wElement, G_MESH);
-        //     wElement.mesh = wMesh;
-        //     wElement.transform = NewTransform(glm::vec3(960, 540, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
+        GUI_button leftPanelTopButton;
+        leftPanelTopButton.Create(glm::vec2(380.0, 50.0), glm::vec2(0.0, 505.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelTopButton.SetReferenceLayout(&Layout);
+        leftPanelTopButton.AddAsChild(&leftPanel);
 
+        GUI_slider leftPanelSlider;
+        leftPanelSlider.Create(0.0, 5.0, GUI_HORIZONTAL, glm::vec2(320.0, 50.0), glm::vec2(30.0, 50.0), glm::vec2(-30.0, 445.0), glm::vec4(0.4, 0.4, 0.4, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSlider.SetReferenceLayout(&Layout);
+        leftPanelSlider.AddAsChild(&leftPanel);
 
-        //     Mesh bMesh;
-        //     MeshGen.RegularShape(&bMesh, G_RECTANGLE);
-        //     bMesh.transform = NewTransform(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(380.0, 30.0, 1.0));
-        //     bMesh.SetColour(glm::vec4(0.4, 0.4, 0.4, 1.0));
+        GUI_button leftPanelSliderButton;
+        leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec2(165.0, 445.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSliderButton.SetReferenceLayout(&Layout);
+        leftPanelSliderButton.AddAsChild(&leftPanel);
 
-        //     Layout.CreateButton(&bElement);
-        //     Layout.AddButtonCallbacks(&bElement, Layout.DefaultButtonStateChange, Layout.DefaultButtonHoverIn, Layout.DefaultButtonHoverOut, Layout.DefaultButtonPress, Layout.DefaultButtonRelease);
-        //     bElement.mesh = bMesh;
-        //     bElement.transform = NewTransform(glm::vec3(0.0, 275.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
-        //     wElementButton = Layout.GetAttributeByType(&bElement, G_BUTTON_ATTRIB);
-        //     Layout.AddChild(&wElement, &bElement);
-        //     AABox bBounds = Layout.CalculateRelativeBounds(&bElement, -1);
-        //     Layout.AddButtonBounds(&bElement, bBounds);
+        Layout.AddElement(&leftPanel);
 
-
-        //     Mesh cMesh;
-        //     MeshGen.RegularShape(&cMesh, G_RECTANGLE);
-        //     cMesh.transform = NewTransform(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(380.0, 530.0, 1.0));
-        //     cMesh.SetColour(glm::vec4(0.9, 0.9, 0.9, 1.0));
-
-        //     Layout.CreateElement(&cElement, G_MESH);
-        //     cElement.mesh = cMesh;
-        //     cElement.transform = NewTransform(glm::vec3(0.0, -25.0, 0.0), glm::vec3(0.0, 0.0, 0.0), glm::vec3(1.0, 1.0, 1.0));
-        //     Layout.AddChild(&wElement, &cElement);
-        // }
-        // Layout.AddElement(&wElement);
-        G_UIelement wElement;
-        G_UIelementAttribute* wElementButton;
-        Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(1200.0, 800.0), 2.0, 50.0);
-        Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
-        Layout.AddElement(&wElement);
-
+        /*
+        
         G_UIelement element;
         G_UIelementAttribute* elementButton;
         {
@@ -109,7 +99,7 @@ namespace Gengine
             Layout.AddButtonBounds(&element, bounds);
             elementButton = Layout.GetAttributeByType(&element, G_BUTTON_ATTRIB);
         }
-        Layout.AddElement(&element);
+        //Layout.AddElement(&element);
 
         G_UIelement base;
         {
@@ -137,16 +127,11 @@ namespace Gengine
 
             Layout.AddChild(&base, &child);
         }
-        Layout.AddElement(&base);
+        //Layout.AddElement(&base);
 
-        GUI_slider slider;
-        slider.Create(0.0, 1.0, GUI_HORIZONTAL, glm::vec2(200.0, 20.0), glm::vec2(20.0, 20.0), glm::vec2(960.0, 540.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
-        slider.SetReferenceLayout(&Layout);
-        slider.AddToLayout();
+        */
 
         Layout.Compile();
-
-        //wElement.supermesh.Print();
         
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
@@ -156,7 +141,7 @@ namespace Gengine
 
             Update(deltaTime);
 
-            Render.Clear();
+            Render.Clear(glm::vec4(1.0));
             Layout.Update();
             Input.Update();
 
@@ -164,14 +149,31 @@ namespace Gengine
             glm::vec3 deltaMouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MouseDeltaPosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
             glm::vec3 mouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MousePosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
             //printf("Mouse world position: %f, %f\n", deltaMouseWorldPos.x, deltaMouseWorldPos.y);
-            if (elementButton->button.isPressed)
+            /*if (leftPanelSliderButton.IsPressed())
             {
-                element.transform.position += deltaMouseWorldPos;
+                float speed = leftPanelSlider.Value();
+                if (Input.Keyboard.Key[GLFW_KEY_UP])
+                {
+                    leftPanel.transform.position.y += deltaTime * speed * 100.0;
+                }
+                if (Input.Keyboard.Key[GLFW_KEY_DOWN])
+                {
+                    leftPanel.transform.position.y += deltaTime * speed * -100.0;
+                }
+                if (Input.Keyboard.Key[GLFW_KEY_LEFT])
+                {
+                    leftPanel.transform.position.x += deltaTime * speed * -100.0;
+                }
+                if (Input.Keyboard.Key[GLFW_KEY_RIGHT])
+                {
+                    leftPanel.transform.position.x += deltaTime * speed * 100.0;
+                }
             }
-            if (wElementButton->button.isPressed)
+            else if (leftPanelTopButton.IsPressed())
             {
-                wElement.transform.position += deltaMouseWorldPos;
-            }
+                leftPanel.transform.position += deltaMouseWorldPos;
+            }*/
+            
             Layout.DrawElements();
 
             glfwSwapBuffers(window);
@@ -184,12 +186,8 @@ namespace Gengine
         // The code for termination is suspiciously slow, probably due to the recursive deletion of elements // -- fixed
         // crashes instead of terminating // -- fixed
         shader.Delete();
-        Layout.RemoveElement(&element);
-        Layout.DeleteElement(&element);
-        Layout.RemoveElement(&base);
-        Layout.DeleteElement(&base);
-        Layout.RemoveElement(&wElement);
-        Layout.DeleteElement(&wElement);
+        Layout.RemoveElement(&leftPanel);
+        Layout.DeleteElement(&leftPanel);
 
         // This does not print // -- fixed
         printf("Window closed after %f seconds\n", TotalTime);

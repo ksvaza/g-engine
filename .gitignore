@@ -31,3 +31,6 @@
 *.out
 *.app
 /.vscode/*
+/code/src/*.js
+/package-lock.json
+/package.json

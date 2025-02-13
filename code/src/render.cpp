@@ -126,9 +126,9 @@ namespace Gengine
 
         return 0;
     }
-    void Renderer::Clear()
+    void Renderer::Clear(glm::vec4 colour)
     {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(colour.r, colour.g, colour.b, colour.a);
         glClear(GL_COLOR_BUFFER_BIT);
     }
 }
