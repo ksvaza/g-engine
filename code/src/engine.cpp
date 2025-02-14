@@ -77,6 +77,23 @@ namespace Gengine
 
         Layout.AddElement(&leftPanel);
 
+        G_UIelement textureTest;
+        {
+            Mesh mesh;
+            MeshGen.RegularShape(&mesh, G_RECTANGLE);
+            mesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
+            mesh.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
+            mesh.transform.scale = glm::vec3(400, 400, 1.0);
+            mesh.SetColour(glm::vec4(1.0));
+
+            Layout.CreateElement(&textureTest, G_MESH);
+            textureTest.mesh = mesh;
+            textureTest.transform.position = glm::vec3(960.0, 540.0, 0.0);
+            textureTest.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
+            textureTest.transform.scale = glm::vec3(1.0, 1.0, 1.0);
+        }
+        Layout.AddElement(&textureTest);
+
         /*
         
         G_UIelement element;
@@ -141,7 +158,7 @@ namespace Gengine
 
             Update(deltaTime);
 
-            Render.Clear(glm::vec4(1.0));
+            Render.Clear(glm::vec4(0.9));
             Layout.Update();
             Input.Update();
 
