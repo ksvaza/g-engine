@@ -45,6 +45,10 @@ namespace Gengine
         //G_UIelementAttribute* wElementButton;
         //Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(1200.0, 800.0), 2.0, 50.0);
         //Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
+
+        Texture baltsTexture;
+        baltsTexture.Load("textures/baltsApalsStarpMums.bmp");
+
         G_UIelement leftPanel;
         {
             Mesh leftPanelMesh;
@@ -53,6 +57,8 @@ namespace Gengine
             leftPanelMesh.transform.position = glm::vec3(0.0, /*44*/0.0, 0.0);
             leftPanelMesh.transform.scale = glm::vec3(400.0, /*200.0*/1080.0, 1.0);
             leftPanelMesh.SetColour(glm::vec4(0.5, 0.5, 0.5, 1.0));
+            leftPanelMesh.AddTexture(baltsTexture);
+            leftPanelMesh.FillTextureID(0);
 
             Layout.CreateElement(&leftPanel, G_PARENT);
             leftPanel.mesh = leftPanelMesh;
@@ -62,29 +68,60 @@ namespace Gengine
 
         GUI_button leftPanelTopButton;
         leftPanelTopButton.Create(glm::vec2(380.0, 50.0), glm::vec2(0.0, 505.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelTopButton.Element()->mesh.AddTexture(baltsTexture);
+        leftPanelTopButton.Element()->mesh.FillTextureID(0);
         leftPanelTopButton.SetReferenceLayout(&Layout);
         leftPanelTopButton.AddAsChild(&leftPanel);
 
         GUI_slider leftPanelSlider;
         leftPanelSlider.Create(0.0, 5.0, GUI_HORIZONTAL, glm::vec2(320.0, 50.0), glm::vec2(30.0, 50.0), glm::vec2(-30.0, 445.0), glm::vec4(0.4, 0.4, 0.4, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSlider.RailElement()->mesh.AddTexture(baltsTexture);
+        leftPanelSlider.RailElement()->mesh.FillTextureID(0);
+        leftPanelSlider.KnobElement()->mesh.AddTexture(baltsTexture);
+        leftPanelSlider.KnobElement()->mesh.FillTextureID(0);
         leftPanelSlider.SetReferenceLayout(&Layout);
         leftPanelSlider.AddAsChild(&leftPanel);
 
         GUI_button leftPanelSliderButton;
         leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec2(165.0, 445.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSliderButton.Element()->mesh.AddTexture(baltsTexture);
+        leftPanelSliderButton.Element()->mesh.FillTextureID(0);
         leftPanelSliderButton.SetReferenceLayout(&Layout);
         leftPanelSliderButton.AddAsChild(&leftPanel);
+
+        G_UIelement leftPanelSquare;
+        {
+            Mesh leftPanelSquareMesh;
+            MeshGen.RegularShape(&leftPanelSquareMesh, G_RECTANGLE);
+            leftPanelSquareMesh.transform = NewTransform();
+            leftPanelSquareMesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
+            leftPanelSquareMesh.transform.scale = glm::vec3(200.0, 200.0, 1.0);
+            leftPanelSquareMesh.SetColour(glm::vec4(1.0));
+            leftPanelSquareMesh.AddTexture(baltsTexture);
+            leftPanelSquareMesh.FillTextureID(0);
+
+            Layout.CreateElement(&leftPanelSquare, G_MESH);
+            leftPanelSquare.mesh = leftPanelSquareMesh;
+            leftPanelSquare.transform = NewTransform();
+            leftPanelSquare.transform.position = glm::vec3(0.0, 0.0, 0.0);
+        }
+        Layout.AddChild(&leftPanel, &leftPanelSquare);
 
         Layout.AddElement(&leftPanel);
 
         G_UIelement textureTest;
         {
             Mesh mesh;
-            MeshGen.RegularShape(&mesh, G_RECTANGLE);
+            MeshGen.RegularShape(&mesh, G_HEXAGON);
             mesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
             mesh.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
             mesh.transform.scale = glm::vec3(400, 400, 1.0);
             mesh.SetColour(glm::vec4(1.0));
+
+            Texture textureApals;
+            textureApals.Load("textures/sarkansApalsStarpMums.bmp");
+            mesh.AddTexture(textureApals);
+            mesh.FillTextureID(0);
 
             Layout.CreateElement(&textureTest, G_MESH);
             textureTest.mesh = mesh;
@@ -166,7 +203,7 @@ namespace Gengine
             glm::vec3 deltaMouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MouseDeltaPosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
             glm::vec3 mouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MousePosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
             //printf("Mouse world position: %f, %f\n", deltaMouseWorldPos.x, deltaMouseWorldPos.y);
-            /*if (leftPanelSliderButton.IsPressed())
+            if (leftPanelSliderButton.IsPressed())
             {
                 float speed = leftPanelSlider.Value();
                 if (Input.Keyboard.Key[GLFW_KEY_UP])
@@ -189,7 +226,9 @@ namespace Gengine
             else if (leftPanelTopButton.IsPressed())
             {
                 leftPanel.transform.position += deltaMouseWorldPos;
-            }*/
+            }
+
+            leftPanel.transform.rotation = glm::vec3(0.0, 0.0, 360.0 * leftPanelSlider.Value() / 5.0);
             
             Layout.DrawElements();
 

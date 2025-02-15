@@ -46,7 +46,8 @@ namespace Gengine
         void AddToLayout();
         void RemoveFromLayout();
         void AddAsChild(G_UIelement* parent);
-        G_UIelement* GetElement();
+        G_UIelement* RailElement();
+        G_UIelement* KnobElement();
         void Delete();
     };
     class GUI_button {
@@ -81,7 +82,7 @@ namespace Gengine
         void AddToLayout();
         void RemoveFromLayout();
         void AddAsChild(G_UIelement* parent);
-        G_UIelement* GetElement();
+        G_UIelement* Element();
         void Delete();
     };
     class GUI_elementList {

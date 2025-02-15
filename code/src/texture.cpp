@@ -9,6 +9,11 @@ namespace Gengine
     int Texture::Load(const char* filepath)
     {
         glGenTextures(1, &textureID);
+        if (!textureID)
+        {
+            printf("Failed to generate texture\n");
+            return -1;
+        }
         glBindTexture(GL_TEXTURE_2D, textureID);
         // set the texture wrapping/filtering options (on the currently bound texture object)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -16,7 +21,6 @@ namespace Gengine
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         // load and generate the texture
-        int width, height, nrChannels;
         unsigned char *data = stbi_load(filepath, &width, &height, &nrChannels, 0);
         if (data)
         {

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <glm/glm.hpp>
 #include <transform.hpp>
+#include <texture.hpp>
 
 namespace Gengine
 {
@@ -9,6 +10,8 @@ namespace Gengine
     typedef struct {
         float x, y, z;
         float r, g, b, a;
+        float u, v;
+        float textureIndex;
     }Vertex;
     typedef struct {
         Vertex V[3];
@@ -53,6 +56,8 @@ namespace Gengine
 
         Transform transform;
         glm::vec4 colour;
+        Texture* textures = NULL;
+        int TextureCount = 0;
 
         static Mesh Empty();
 
@@ -63,13 +68,16 @@ namespace Gengine
         Vertex* GetVertices();
         Index* GetIndices();
         void FillColour(float r, float g, float b, float a);
+        void FillTextureID(int textureID);
         void SetColour(glm::vec4 colour);
         glm::vec4 GetColour();
         void Print();
-        char Equals(Mesh mesh);
+        char Equals(Mesh mesh); // not fully sure that it works
 
         void SetBoundingBox(AABox box);
         AABox GetBoundingBox();
+        void AddTexture(Texture texture);
+        Texture GetTexture(int index);
         void SetTransform(Transform transform);
         void SetTransform();
         Transform GetTransform();
@@ -81,6 +89,7 @@ namespace Gengine
         static int HelloTriangle(Mesh* mesh);
         static int RegularShape(Mesh* mesh, Gshape shape);
         static int CalculateBounds(Mesh* mesh);
+        static int CalculateTextureCoordinates(Mesh* mesh);
         static int CopyMesh(Mesh* destinaton, Mesh* source);
         static int StichMesh(Mesh* base, Mesh* add);
         static int AddMesh(Mesh* base, Mesh* add);

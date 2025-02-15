@@ -15,6 +15,7 @@ namespace Gengine
         mesh.Indices = NULL;
         mesh.VertexCount = 0;
         mesh.IndexCount = 0;
+        mesh.TextureCount = 0;
         mesh.BoundingBox.x = 0.0f;
         mesh.BoundingBox.y = 0.0f;
         mesh.BoundingBox.z = 0.0f;
@@ -36,6 +37,8 @@ namespace Gengine
         if (Indices) { free(Indices); }
         IndexCount = indexCount;
         Indices = (Index*)malloc(sizeof(Index) * indexCount);
+
+        TextureCount = 0;
 
         BoundingBox = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
         transform = { glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f) };
@@ -59,6 +62,7 @@ namespace Gengine
     {
         if (Vertices) { free(Vertices); }
         if (Indices) { free(Indices); }
+        if (textures) { free(textures); }
         *this = Empty();
     }
     void Mesh::Fill(Vertex* vertices, Index* indices)
@@ -97,6 +101,13 @@ namespace Gengine
             Vertices[i].a = a;
         }
     }
+    void Mesh::FillTextureID(int textureID)
+    {
+        for (int i = 0; i < VertexCount; i++)
+        {
+            Vertices[i].textureIndex = (float)textureID;
+        }
+    }
     void Mesh::SetColour(glm::vec4 colour)
     {
         this->colour = colour;
@@ -121,6 +132,8 @@ namespace Gengine
         {
             printf("{\n\tPosition: (%f, %f, %f)\n", Vertices[i].x, Vertices[i].y, Vertices[i].z);
             printf("\tColor: (%f, %f, %f, %f)\n}", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
+            printf("\tTexture coordinates: (%f, %f)\n", Vertices[i].u, Vertices[i].v);
+            printf("\tTexture index: %d\n", (int)Vertices[i].textureIndex);
             printf("\n");
         }
         printf("Mesh indicies: %d\n", IndexCount);
@@ -161,6 +174,16 @@ namespace Gengine
     AABox Mesh::GetBoundingBox()
     {
         return BoundingBox;
+    }
+    void Mesh::AddTexture(Texture texture)
+    {
+        TextureCount++;
+        textures = (Texture*)realloc(textures, sizeof(Texture) * TextureCount);
+        textures[TextureCount - 1] = texture;
+    }
+    Texture Mesh::GetTexture(int index)
+    {
+        return textures[index];
     }
     void Mesh::SetTransform(Transform transform)
     {
@@ -216,10 +239,13 @@ namespace Gengine
             Vertices[i].g = 1.0f;
             Vertices[i].b = 1.0f;
             Vertices[i].a = 1.0f;
+            Vertices[i].u = 0.0f;
+            Vertices[i].v = 0.0f;
+            Vertices[i].textureIndex = -1.0;
         }
 
         mesh->Fill(Vertices, Indices);
-        mesh->FillColour(1.0f, 0.5f, 0.2f, 1.0f);
+        mesh->SetColour(glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 
         return 0;
     }
@@ -354,7 +380,9 @@ namespace Gengine
             mesh->GetVertices()[i].g = 1.0f;
             mesh->GetVertices()[i].b = 1.0f;
             mesh->GetVertices()[i].a = 1.0f;
+            mesh->GetVertices()[i].textureIndex = -1.0;
         }
+        MeshGenerator::CalculateTextureCoordinates(mesh);
 
         return 0;
     }
@@ -380,12 +408,35 @@ namespace Gengine
         mesh->SetBoundingBox(box);
         return 0;
     }
-    int MeshGenerator::CopyMesh(Mesh* destinaton, Mesh* source)
+    int MeshGenerator::CalculateTextureCoordinates(Mesh* mesh)
     {
-        destinaton->Recreate(source->VertexCount, source->IndexCount);
-        Vertex* destVerts = destinaton->GetVertices();
+        Vertex* verts = mesh->GetVertices();
+        
+        float minX = FLT_MAX, minY = FLT_MAX;
+        float maxX = -FLT_MAX, maxY = -FLT_MAX;
+
+        // Calculate bounds
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            if (verts[i].x < minX) { minX = verts[i].x; } if (verts[i].x > maxX) { maxX = verts[i].x; }
+            if (verts[i].y < minY) { minY = verts[i].y; } if (verts[i].y > maxY) { maxY = verts[i].y; }
+        }
+
+        // Apply texture coordinates
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            verts[i].u = (verts[i].x - minX) / (maxX - minX);
+            verts[i].v = -(verts[i].y - minY) / (maxY - minY);
+        }
+
+        return 0;
+    }
+    int MeshGenerator::CopyMesh(Mesh* destination, Mesh* source)
+    {
+        destination->Recreate(source->VertexCount, source->IndexCount);
+        Vertex* destVerts = destination->GetVertices();
         Vertex* sourceVerts = source->GetVertices();
-        Index* destIndices = destinaton->GetIndices();
+        Index* destIndices = destination->GetIndices();
         Index* sourceIndices = source->GetIndices();
 
         for (int i = 0; i < source->VertexCount; i++)
@@ -398,9 +449,14 @@ namespace Gengine
             destIndices[i] = sourceIndices[i];
         }
 
-        destinaton->SetColour(source->GetColour());
-        destinaton->SetBoundingBox(source->GetBoundingBox());
-        destinaton->SetTransform(source->GetTransform());
+        destination->SetColour(source->GetColour());
+        destination->SetBoundingBox(source->GetBoundingBox());
+        destination->SetTransform(source->GetTransform());
+        for (int i = 0; i < source->TextureCount; i++)
+        {
+            destination->AddTexture(source->GetTexture(i));
+        }
+        //printf("CopyMesh texture count: %d\n", destination->TextureCount);
 
         return 0;
     }
@@ -408,9 +464,11 @@ namespace Gengine
     {
         Vertex* addVertices = add->GetVertices();
         Index* addIndices = add->GetIndices();
+        Texture* addTextures = add->textures;
 
         int baseVertexCount = base->VertexCount;
         int baseIndexCount = base->IndexCount;
+        int baseTextureCount = base->TextureCount;
         base->Recreate(base->VertexCount + add->VertexCount, base->IndexCount + add->IndexCount);
         Vertex* newVertices = base->GetVertices();
         Index* newIndices = base->GetIndices();
@@ -418,6 +476,10 @@ namespace Gengine
         for (int i = 0; i < add->VertexCount; i++)
         {
             newVertices[baseVertexCount + i] = addVertices[i];
+            if (newVertices[baseVertexCount + i].textureIndex != -1.0)
+            {
+                newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
+            }
         }
 
         for (int i = 0; i < add->IndexCount; i++)
@@ -429,15 +491,22 @@ namespace Gengine
             }
         }
 
+        for (int i = 0; i < add->TextureCount; i++)
+        {
+            base->AddTexture(addTextures[i]);
+        }
+
         return 0;
     }
     int MeshGenerator::AddMesh(Mesh* base, Mesh* add)
     {
         Vertex* addVertices = add->GetVertices();
         Index* addIndices = add->GetIndices();
+        Texture* addTextures = add->textures;
 
         int baseVertexCount = base->VertexCount;
         int baseIndexCount = base->IndexCount;
+        int baseTextureCount = base->TextureCount;
         base->Recreate(base->VertexCount + add->VertexCount, base->IndexCount + add->IndexCount);
         Vertex* newVertices = base->GetVertices();
         Index* newIndices = base->GetIndices();
@@ -453,8 +522,21 @@ namespace Gengine
             glm::vec4 baseColour = base->GetColour();
 
             // Add
-            Vertex newVertex = { vertex.x, vertex.y, vertex.z, addVertices[i].r * colour.r / baseColour.r, addVertices[i].g * colour.g / baseColour.g, addVertices[i].b * colour.b / baseColour.b, addVertices[i].a * colour.a / baseColour.a };
+            Vertex newVertex = {
+                vertex.x, vertex.y, vertex.z, 
+                addVertices[i].r * colour.r / baseColour.r, 
+                addVertices[i].g * colour.g / baseColour.g, 
+                addVertices[i].b * colour.b / baseColour.b, 
+                addVertices[i].a * colour.a / baseColour.a,
+                addVertices[i].u, addVertices[i].v, addVertices[i].textureIndex
+            };
             newVertices[baseVertexCount + i] = newVertex;
+
+            // Texture index correction
+            if (newVertices[baseVertexCount + i].textureIndex != -1.0)
+            {
+                newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
+            }
         }
 
         for (int i = 0; i < add->IndexCount; i++)
@@ -465,6 +547,12 @@ namespace Gengine
                 newIndices[baseIndexCount + i].I[j] += baseVertexCount;
             }
         }
+
+        for (int i = 0; i < add->TextureCount; i++)
+        {
+            base->AddTexture(addTextures[i]);
+        }
+        //printf("AddMesh texture count: %d\n", baseTextureCount);
 
         return 0;
     }

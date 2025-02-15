@@ -201,9 +201,13 @@ namespace Gengine
     {
         Glayout::AddChild(parent, railElement);
     }
-    G_UIelement* GUI_slider::GetElement()
+    G_UIelement* GUI_slider::RailElement()
     {
         return railElement;
+    }
+    G_UIelement* GUI_slider::KnobElement()
+    {
+        return knobElement;
     }
     void GUI_slider::RemoveFromLayout()
     {
@@ -350,7 +354,7 @@ namespace Gengine
     {
         Glayout::AddChild(parent, buttonElement);
     }
-    G_UIelement* GUI_button::GetElement()
+    G_UIelement* GUI_button::Element()
     {
         return buttonElement;
     }

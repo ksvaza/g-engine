@@ -22,6 +22,7 @@ namespace Gengine
 
         void SetUniformMat4(const char* name, glm::mat4 matrix);
         void SetUniformVec4(const char* name, glm::vec4 vector);
+        void SetUniform1iv(const char* name, int count, int* values);
 
         Shader(){};
         ~Shader(){};

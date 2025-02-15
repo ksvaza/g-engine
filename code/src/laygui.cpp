@@ -457,6 +457,7 @@ namespace Gengine
                     mesh = UI_elementList[i]->supermesh;
                 }
                 mesh.transform = UI_elementList[i]->transform;
+                //printf("Element texture count: %d\n", mesh.TextureCount);
                 Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix);
                 //Render->DrawBoundingBox(mesh, UIshader, UIviewMatrix, UIprojectionMatrix);
             }
@@ -481,7 +482,7 @@ namespace Gengine
             CalculateSupermesh(UI_elementList[i], -1); // Calculate supermeshes
             UI_elementList[i]->supermesh.SetBoundingBox(CalculateRelativeBounds(UI_elementList[i], -1)); // Calculate relative bounds
         }
-        printf("Button count: %d\n", (int)UI_attributeMap[G_BUTTON_ATTRIB].size());
+        //printf("Button count: %d\n", (int)UI_attributeMap[G_BUTTON_ATTRIB].size());
         for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
         {
             G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
@@ -495,7 +496,7 @@ namespace Gengine
 
             buttonClass->Precalculate();
         }
-        printf("Slider count: %d\n", (int)UI_attributeMap[G_SLIDER_ATTRIB].size());
+        //printf("Slider count: %d\n", (int)UI_attributeMap[G_SLIDER_ATTRIB].size());
         for (int i = 0; i < (int)UI_attributeMap[G_SLIDER_ATTRIB].size(); i++)
         {
             G_UIelement* element = UI_attributeMap[G_SLIDER_ATTRIB][i];
