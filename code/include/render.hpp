@@ -10,7 +10,7 @@ namespace Gengine
     private:
         
     public:
-        int DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+        int DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Texture font);
         int DrawBoundingBox(Mesh mesh, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
         void Clear(glm::vec4 colour);
     };

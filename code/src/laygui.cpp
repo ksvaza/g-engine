@@ -7,6 +7,8 @@
 #include <hwinputs.hpp>
 #include <glm/glm.hpp>
 #include <uicreator.hpp>
+#include <uibutton.hpp>
+#include <uislider.hpp>
 
 using namespace std;
 
@@ -111,6 +113,7 @@ namespace Gengine
     }
     void Glayout::AddChild(G_UIelement* parent, G_UIelement* child)
     {
+        if (!parent) { return; }
         parent->children = (G_UIelement**)realloc(parent->children, sizeof(G_UIelement*) * (parent->childCount + 1));
         parent->children[parent->childCount] = child;
         child->parent = parent;
@@ -402,6 +405,10 @@ namespace Gengine
     {
         this->Gwindow = Gwindow;
     }
+    void Glayout::SetFontTexture(Texture fontTexture)
+    {
+        this->fontTexture = fontTexture;
+    }
     void Glayout::AddElement(G_UIelement* element)
     {
         UI_elementList = (G_UIelement**)realloc(UI_elementList, sizeof(G_UIelement*) * (UI_elementCount + 1));
@@ -458,7 +465,7 @@ namespace Gengine
                 }
                 mesh.transform = UI_elementList[i]->transform;
                 //printf("Element texture count: %d\n", mesh.TextureCount);
-                Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix);
+                Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix, fontTexture);
                 //Render->DrawBoundingBox(mesh, UIshader, UIviewMatrix, UIprojectionMatrix);
             }
         }

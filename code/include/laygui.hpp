@@ -19,14 +19,16 @@ namespace Gengine
     enum G_UIelementType {
         G_EMPTY = 0x00,
         G_MESH = 0x01,
-        G_BUTTON = 0x02,
-        G_SLIDER = 0x03,
-        G_PARENT = 0x04,
+        G_PARENT = 0x02,
+        G_BUTTON = 0x03,
+        G_SLIDER = 0x04,
+        G_TEXT = 0x05,
     };
     enum G_UIattribType {
         G_EMPTY_ATTRIB = 0x00,
         G_BUTTON_ATTRIB = 0x01,
         G_SLIDER_ATTRIB = 0x02,
+        G_TEXT_ATTRIB = 0x03,
     };
 
     // Structs and Unions
@@ -61,10 +63,21 @@ namespace Gengine
         char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
         void* slider = NULL;
     };
+    struct G_UIattribText {
+        G_UIattribType type = G_EMPTY_ATTRIB;
+        char* textContent = NULL;
+        uint16_t textLength = 0;
+        char* fontName = NULL;
+        uint16_t fontSize = 0;
+        glm::vec4 textColour = glm::vec4(1.0);
+        void* text = NULL;
+    };
+
     union G_UIelementAttribute {
         G_UIattribType type = G_EMPTY_ATTRIB;
         G_UIattribButton button;
         G_UIattribSlider slider;
+        G_UIattribText text;
         G_UIelementAttribute() {}
         ~G_UIelementAttribute() {}
     };
@@ -98,6 +111,7 @@ namespace Gengine
         HWInputs* Input;
         Window* Gwindow;
         Renderer* Render;
+        Texture fontTexture;
     
         // G_UIelement basic functions
         static void CreateElement(G_UIelement* element, G_UIelementType type);
@@ -126,6 +140,7 @@ namespace Gengine
         void SetUIprojectionMatrix(glm::mat4 projectionMatrix);
         void SetInput(HWInputs* input);
         void SetWindow(Window* window);
+        void SetFontTexture(Texture fontTexture);
         void AddElement(G_UIelement* element);
         void RemoveElement(G_UIelement* element);
         void UpdateAttributeMap();

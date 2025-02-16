@@ -8,7 +8,7 @@
 
 namespace Gengine
 {
-    int Renderer::DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+    int Renderer::DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Texture font)
     {
         float* vertexData = (float*)mesh.GetVertices();
         unsigned int* indices = (unsigned int*)mesh.GetIndices();
@@ -57,7 +57,7 @@ namespace Gengine
             glActiveTexture(GL_TEXTURE0 + i);
             if (!mesh.GetTexture(i).textureID)
             {
-                printf("Empty Texture!\t", mesh.TextureCount);
+                printf("Empty Texture!\t");
                 continue;
             }
             glBindTexture(GL_TEXTURE_2D, mesh.GetTexture(i).textureID);
@@ -66,6 +66,10 @@ namespace Gengine
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, 0); // Or bind a default texture.
         }*/
+
+        shader.SetUniform1i("uFontTexture", 32);
+        glActiveTexture(GL_TEXTURE0 + 32);
+        glBindTexture(GL_TEXTURE_2D, font.textureID);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 

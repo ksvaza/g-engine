@@ -112,6 +112,11 @@ namespace Gengine {
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniform4fv(location, 1, glm::value_ptr(vector));
     }
+    void Shader::SetUniform1i(const char* name, int value)
+    {
+        unsigned int location = glGetUniformLocation(shaderProgram, name);
+        glUniform1i(location, value);
+    }
     void Shader::SetUniform1iv(const char* name, int count, int* values)
     {
         unsigned int location = glGetUniformLocation(shaderProgram, name);

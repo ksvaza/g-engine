@@ -8,7 +8,9 @@
 #include <mesh.hpp>
 #include <shader.hpp>
 #include <laygui.hpp>
-#include <uicreator.hpp>
+#include <uibutton.hpp>
+#include <uislider.hpp>
+#include <uitext.hpp>
 
 namespace Gengine
 {
@@ -57,8 +59,6 @@ namespace Gengine
             leftPanelMesh.transform.position = glm::vec3(0.0, /*44*/0.0, 0.0);
             leftPanelMesh.transform.scale = glm::vec3(400.0, /*200.0*/1080.0, 1.0);
             leftPanelMesh.SetColour(glm::vec4(0.5, 0.5, 0.5, 1.0));
-            leftPanelMesh.AddTexture(baltsTexture);
-            leftPanelMesh.FillTextureID(0);
 
             Layout.CreateElement(&leftPanel, G_PARENT);
             leftPanel.mesh = leftPanelMesh;
@@ -68,24 +68,16 @@ namespace Gengine
 
         GUI_button leftPanelTopButton;
         leftPanelTopButton.Create(glm::vec2(380.0, 50.0), glm::vec2(0.0, 505.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
-        leftPanelTopButton.Element()->mesh.AddTexture(baltsTexture);
-        leftPanelTopButton.Element()->mesh.FillTextureID(0);
         leftPanelTopButton.SetReferenceLayout(&Layout);
         leftPanelTopButton.AddAsChild(&leftPanel);
 
         GUI_slider leftPanelSlider;
         leftPanelSlider.Create(0.0, 5.0, GUI_HORIZONTAL, glm::vec2(320.0, 50.0), glm::vec2(30.0, 50.0), glm::vec2(-30.0, 445.0), glm::vec4(0.4, 0.4, 0.4, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
-        leftPanelSlider.RailElement()->mesh.AddTexture(baltsTexture);
-        leftPanelSlider.RailElement()->mesh.FillTextureID(0);
-        leftPanelSlider.KnobElement()->mesh.AddTexture(baltsTexture);
-        leftPanelSlider.KnobElement()->mesh.FillTextureID(0);
         leftPanelSlider.SetReferenceLayout(&Layout);
         leftPanelSlider.AddAsChild(&leftPanel);
 
         GUI_button leftPanelSliderButton;
         leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec2(165.0, 445.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
-        leftPanelSliderButton.Element()->mesh.AddTexture(baltsTexture);
-        leftPanelSliderButton.Element()->mesh.FillTextureID(0);
         leftPanelSliderButton.SetReferenceLayout(&Layout);
         leftPanelSliderButton.AddAsChild(&leftPanel);
 
@@ -107,29 +99,22 @@ namespace Gengine
         }
         Layout.AddChild(&leftPanel, &leftPanelSquare);
 
+        Texture font;
+        font.Load("fonts/SUS-8.png");
+        Layout.SetFontTexture(font);
+
+        GUI_text textTest;
+        textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec2(-184.0, 12.0), glm::vec4(1.0, 1.0, 1.0, 1.0), "fonts/SUS-8.png", 24);
+        textTest.SetReferenceLayout(&Layout);
+        textTest.AddAsChild(leftPanelTopButton.Element());
+
         Layout.AddElement(&leftPanel);
 
-        G_UIelement textureTest;
-        {
-            Mesh mesh;
-            MeshGen.RegularShape(&mesh, G_HEXAGON);
-            mesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.scale = glm::vec3(400, 400, 1.0);
-            mesh.SetColour(glm::vec4(1.0));
-
-            Texture textureApals;
-            textureApals.Load("textures/sarkansApalsStarpMums.bmp");
-            mesh.AddTexture(textureApals);
-            mesh.FillTextureID(0);
-
-            Layout.CreateElement(&textureTest, G_MESH);
-            textureTest.mesh = mesh;
-            textureTest.transform.position = glm::vec3(960.0, 540.0, 0.0);
-            textureTest.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            textureTest.transform.scale = glm::vec3(1.0, 1.0, 1.0);
-        }
-        Layout.AddElement(&textureTest);
+        GUI_text fpsCounter;
+        char* fpsString = (char*)malloc(20);
+        fpsCounter.Create("FPS: 60.00", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), "fonts/SUS-8.png", 50);
+        fpsCounter.SetReferenceLayout(&Layout);
+        fpsCounter.AddToLayout();
 
         /*
         
@@ -187,17 +172,36 @@ namespace Gengine
 
         Layout.Compile();
         
+        const uint8_t fpsSmoothness = 20;
+        float fpsArray[fpsSmoothness];
+        for (uint8_t i = 0; i < fpsSmoothness; i++) { fpsArray[i] = 60.0; }
+
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
+        float lastAngle = 0.0f;
+        uint32_t timeSinceLastAngle = 0;
         while (!glfwWindowShouldClose(window))
         {
             glfwSetTime((double)0.0);
 
             Update(deltaTime);
 
-            Render.Clear(glm::vec4(0.9));
+            Render.Clear(glm::vec4(1.0));
             Layout.Update();
             Input.Update();
+
+            // Calculate the FPS
+            for (uint8_t i = 0; i < fpsSmoothness - 1; i++) { fpsArray[i] = fpsArray[i + 1]; }
+            fpsArray[fpsSmoothness - 1] = 1.0 / deltaTime;
+            float fpsSum = 0.0;
+            for (uint8_t i = 0; i < fpsSmoothness; i++) { fpsSum += fpsArray[i]; }
+            float fps = fpsSum / fpsSmoothness;
+
+            // Update the FPS counter
+            sprintf(fpsString, "FPS: %3.1f", fps);
+            fpsCounter.textContent = fpsString;
+            fpsCounter.UpdateText();
+            Layout.RecalculateSupermesh(fpsCounter.TextElement());
 
             // Korrigieren die Mesh aus Mouse Position
             glm::vec3 deltaMouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MouseDeltaPosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
@@ -205,7 +209,7 @@ namespace Gengine
             //printf("Mouse world position: %f, %f\n", deltaMouseWorldPos.x, deltaMouseWorldPos.y);
             if (leftPanelSliderButton.IsPressed())
             {
-                float speed = leftPanelSlider.Value();
+                /*float speed = leftPanelSlider.Value();
                 if (Input.Keyboard.Key[GLFW_KEY_UP])
                 {
                     leftPanel.transform.position.y += deltaTime * speed * 100.0;
@@ -221,14 +225,33 @@ namespace Gengine
                 if (Input.Keyboard.Key[GLFW_KEY_RIGHT])
                 {
                     leftPanel.transform.position.x += deltaTime * speed * 100.0;
+                }*/
+
+                // Calculate the relative position of the mouse to the leftPanelSquare in the middle of the left panel
+                glm::vec3 relativeMousePos = mouseWorldPos - leftPanel.transform.position;
+
+                // Calculate the angle of the mouse position relative to the leftPanelSquare
+                float angle = atan2(relativeMousePos.y, relativeMousePos.x) * 180.0 / 3.14159265359;
+
+                //printf("Delta angle: %f\n", angle - lastAngle);
+
+                // Apply the delta angle to the leftPanelSquare
+                if (timeSinceLastAngle <= 1)
+                {
+                    leftPanelSquare.transform.rotation.z += angle - lastAngle;
+                    Layout.RecalculateSupermesh(&leftPanelSquare);
+                    
                 }
+                lastAngle = angle;
+                timeSinceLastAngle = 0;
             }
             else if (leftPanelTopButton.IsPressed())
             {
                 leftPanel.transform.position += deltaMouseWorldPos;
             }
+            timeSinceLastAngle++;
 
-            leftPanel.transform.rotation = glm::vec3(0.0, 0.0, 360.0 * leftPanelSlider.Value() / 5.0);
+            /*leftPanel.transform.rotation = glm::vec3(0.0, 0.0, 360.0 * leftPanelSlider.Value() / 5.0);*/
             
             Layout.DrawElements();
 
