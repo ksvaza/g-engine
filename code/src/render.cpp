@@ -47,12 +47,12 @@ namespace Gengine
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(9 * sizeof(float)));
         glEnableVertexAttribArray(3);
 
-        GLint samplers[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+        GLint samplers[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-        if (mesh.TextureCount > 32) { shader.SetUniform1iv("uTextures", 32, samplers); }
+        if (mesh.TextureCount > 16) { shader.SetUniform1iv("uTextures", 16, samplers); }
         else { shader.SetUniform1iv("uTextures", mesh.TextureCount, samplers); }
 
-        for (int i = 0; i < mesh.TextureCount && i < 32; i++)
+        for (int i = 0; i < mesh.TextureCount && i < 16; i++)
         {
             glActiveTexture(GL_TEXTURE0 + i);
             if (!mesh.GetTexture(i).textureID)
@@ -67,8 +67,8 @@ namespace Gengine
             glBindTexture(GL_TEXTURE_2D, 0); // Or bind a default texture.
         }*/
 
-        shader.SetUniform1i("uFontTexture", 32);
-        glActiveTexture(GL_TEXTURE0 + 32);
+        shader.SetUniform1i("uFontTexture", 16);
+        glActiveTexture(GL_TEXTURE0 + 16);
         glBindTexture(GL_TEXTURE_2D, font.textureID);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);

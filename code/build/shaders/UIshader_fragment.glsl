@@ -6,14 +6,14 @@ flat in int oTexID;
 
 out vec4 FragColor;
 
-uniform sampler2D uTextures[32]; // sure buddy, 32 textures, why not - copilot
+uniform sampler2D uTextures[16]; // sure buddy, 32 textures, why not - copilot
 uniform sampler2D uFontTexture;
 
 void main()
 {
     if (oTexID >= 0)
     {
-        if (oTexID == 32)
+        if (oTexID == 16)
         {
             FragColor = oColour * texture(uFontTexture, oTexCoords);
         }

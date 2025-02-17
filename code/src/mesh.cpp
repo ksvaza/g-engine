@@ -476,10 +476,10 @@ namespace Gengine
         for (int i = 0; i < add->VertexCount; i++)
         {
             newVertices[baseVertexCount + i] = addVertices[i];
-            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 32.0)
+            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
-                if (newVertices[baseVertexCount + i].textureIndex >= 32.0)
+                if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
                 {
                     newVertices[baseVertexCount + i].textureIndex = -1.0;
                 }
@@ -537,10 +537,10 @@ namespace Gengine
             newVertices[baseVertexCount + i] = newVertex;
 
             // Texture index correction
-            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 32.0)
+            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
-                if (newVertices[baseVertexCount + i].textureIndex >= 32.0)
+                if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
                 {
                     newVertices[baseVertexCount + i].textureIndex = -1.0;
                 }

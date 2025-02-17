@@ -193,7 +193,7 @@ namespace Gengine
         }
         textMesh.FillColour(1.0, 1.0, 1.0, 1.0);
         //textMesh.AddTexture(font);
-        textMesh.FillTextureID(32);
+        textMesh.FillTextureID(16);
         textMesh.SetColour(textColour);
 
         textElement->mesh.Delete();
