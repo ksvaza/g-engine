@@ -11,6 +11,8 @@
 #include <uibutton.hpp>
 #include <uislider.hpp>
 #include <uitext.hpp>
+#include <texture.hpp>
+#include <textgen.hpp>
 
 namespace Gengine
 {
@@ -50,6 +52,15 @@ namespace Gengine
 
         Texture baltsTexture;
         baltsTexture.Load("textures/baltsApalsStarpMums.bmp");
+        baltsTexture.LoadData("textures/baltsApalsStarpMums.bmp");
+
+        Texture greenTexture;
+        greenTexture.LoadData("textures/zalsStarpMums.bmp");
+
+        TextureAtlas atlas;
+        atlas.AddTexture(greenTexture);
+        atlas.AddTexture(greenTexture);
+        atlas.Bake("textures/white.bmp");
 
         G_UIelement leftPanel;
         {
@@ -238,7 +249,7 @@ namespace Gengine
                 // Apply the delta angle to the leftPanelSquare
                 if (timeSinceLastAngle <= 1)
                 {
-                    leftPanelSquare.transform.rotation.z += angle - lastAngle;
+                    leftPanel.transform.rotation.z += angle - lastAngle;
                     Layout.RecalculateSupermesh(&leftPanelSquare);
                     
                 }

@@ -6,6 +6,23 @@
 
 namespace Gengine
 {
+    int Texture::LoadData(const char* filepath)
+    {
+        data = stbi_load(filepath, &width, &height, &nrChannels, 0);
+        if (!data)
+        {
+            printf("Failed to load texture\n");
+            return -1;
+        }
+        return 0;
+    }
+    void Texture::FreeData()
+    {
+        if (data)
+        {
+            stbi_image_free(data);
+        }
+    }
     int Texture::Load(const char* filepath)
     {
         glGenTextures(1, &textureID);
