@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <transform.hpp>
 #include <texture.hpp>
+#include <texgen.hpp>
 
 namespace Gengine
 {
@@ -58,6 +59,7 @@ namespace Gengine
         glm::vec4 colour;
         Texture* textures = NULL;
         int TextureCount = 0;
+        void* atlas = NULL;
 
         static Mesh Empty();
 

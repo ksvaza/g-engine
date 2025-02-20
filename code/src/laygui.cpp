@@ -9,6 +9,7 @@
 #include <uicreator.hpp>
 #include <uibutton.hpp>
 #include <uislider.hpp>
+#include <texgen.hpp>
 
 using namespace std;
 
@@ -50,6 +51,21 @@ namespace Gengine
         for (int i = 0; i < element->childCount; i++)
         {
             recursiveRemoveAttribute(element->children[i], type);
+        }
+    }
+    void Glayout::recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas)
+    {
+        if (element->mesh.TextureCount > 0)
+        {
+            printf("Mesh texcount: %d\n", element->mesh.TextureCount);
+            for (int i = 0; i < element->mesh.TextureCount; i++)
+            {
+                atlas->AddTexture(&element->mesh.textures[i]);
+            }
+        }
+        for (int i = 0; i < element->childCount; i++)
+        {
+            recursiveTextureAtlasStich(element->children[i], atlas);
         }
     }
 
@@ -164,6 +180,7 @@ namespace Gengine
             {
                 Mesh mesh;
                 MeshGenerator::CopyMesh(&mesh, &element->mesh);
+                
                 MeshGenerator::TransformMesh(&mesh, mesh.GetTransform());
                 mesh.SetTransform();
                 element->supermesh = mesh;
@@ -382,6 +399,28 @@ namespace Gengine
         parent->childCount -= offset;
     }
 
+    // Atlas Management functions
+    // ----------------------------------------------------------------
+
+    int Glayout::StichAtlas(G_UIelement* parent)
+    {
+        parent->mesh.atlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
+        *((TextureAtlas*)parent->mesh.atlas) = TextureAtlas::Empty();
+        recursiveTextureAtlasStich(parent, (TextureAtlas*)parent->mesh.atlas);
+
+        // Testing
+        printf("Texture count: %d\n", ((TextureAtlas*)parent->mesh.atlas)->textureCount);
+        char* name = (char*)malloc(256);
+        sprintf(name, "textures/temp/%lld.bmp", parent->uniqueID);
+        ((TextureAtlas*)parent->mesh.atlas)->Bake(name);
+        printf("Atlas stiched\n");
+        return 0;
+    }
+    int Glayout::MapAtlas(G_UIelement* parent)
+    {
+        return 0;
+    }
+
     // UI system functions
     // ----------------------------------------------------------------
 
@@ -486,6 +525,9 @@ namespace Gengine
         //printf("UI element count: %d\n", UI_elementCount);
         for (uint16_t i = 0; i < UI_elementCount; i++)
         {
+            StichAtlas(UI_elementList[i]); // Stich atlases
+            MapAtlas(UI_elementList[i]); // Map atlases
+            
             CalculateSupermesh(UI_elementList[i], -1); // Calculate supermeshes
             UI_elementList[i]->supermesh.SetBoundingBox(CalculateRelativeBounds(UI_elementList[i], -1)); // Calculate relative bounds
         }

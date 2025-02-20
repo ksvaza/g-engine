@@ -12,7 +12,7 @@
 #include <uislider.hpp>
 #include <uitext.hpp>
 #include <texture.hpp>
-#include <textgen.hpp>
+#include <texgen.hpp>
 
 namespace Gengine
 {
@@ -55,11 +55,16 @@ namespace Gengine
         baltsTexture.LoadData("textures/baltsApalsStarpMums.bmp");
 
         Texture greenTexture;
+        greenTexture.Load("textures/zalsStarpMums.bmp");
         greenTexture.LoadData("textures/zalsStarpMums.bmp");
 
+        Texture redTexture;
+        redTexture.LoadData("textures/sarkansApalsStarpMums.bmp");
+
         TextureAtlas atlas;
-        atlas.AddTexture(greenTexture);
-        atlas.AddTexture(greenTexture);
+        atlas.AddTexture(&greenTexture);
+        atlas.AddTexture(&baltsTexture);
+        atlas.AddTexture(&redTexture);
         atlas.Bake("textures/white.bmp");
 
         G_UIelement leftPanel;
@@ -121,6 +126,49 @@ namespace Gengine
 
         Layout.AddElement(&leftPanel);
 
+        G_UIelement testTexturing;
+        {
+            Mesh testTexturingMesh;
+            MeshGen.RegularShape(&testTexturingMesh, G_RECTANGLE);
+            testTexturingMesh.transform = NewTransform();
+            testTexturingMesh.transform.scale = glm::vec3(200.0, 200.0, 1.0);
+            testTexturingMesh.SetColour(glm::vec4(1.0));
+
+            Layout.CreateElement(&testTexturing, G_MESH);
+            testTexturing.mesh = testTexturingMesh;
+            testTexturing.transform = NewTransform();
+            testTexturing.transform.position = glm::vec3(960.0, 540.0, 0.0);
+
+            G_UIelement testTexturingSprite1;
+            Mesh testTexturingSprite1Mesh;
+            MeshGen.RegularShape(&testTexturingSprite1Mesh, G_RECTANGLE);
+            testTexturingSprite1Mesh.transform = NewTransform();
+            testTexturingSprite1Mesh.transform.scale = glm::vec3(100.0, 100.0, 1.0);
+            testTexturingSprite1Mesh.SetColour(glm::vec4(1.0));
+            testTexturingSprite1Mesh.AddTexture(redTexture);
+            testTexturingSprite1Mesh.FillTextureID(0);
+            Layout.CreateElement(&testTexturingSprite1, G_MESH);
+            testTexturingSprite1.mesh = testTexturingSprite1Mesh;
+            testTexturingSprite1.transform = NewTransform();
+            testTexturingSprite1.transform.position = glm::vec3(-50.0, 0.0, 0.0);
+            Layout.AddChild(&testTexturing, &testTexturingSprite1);
+
+            G_UIelement testTexturingSprite2;
+            Mesh testTexturingSprite2Mesh;
+            MeshGen.RegularShape(&testTexturingSprite2Mesh, G_RECTANGLE);
+            testTexturingSprite2Mesh.transform = NewTransform();
+            testTexturingSprite2Mesh.transform.scale = glm::vec3(100.0, 100.0, 1.0);
+            testTexturingSprite2Mesh.SetColour(glm::vec4(1.0));
+            testTexturingSprite2Mesh.AddTexture(greenTexture);
+            testTexturingSprite2Mesh.FillTextureID(0);
+            Layout.CreateElement(&testTexturingSprite2, G_MESH);
+            testTexturingSprite2.mesh = testTexturingSprite2Mesh;
+            testTexturingSprite2.transform = NewTransform();
+            testTexturingSprite2.transform.position = glm::vec3(50.0, 0.0, 0.0);
+            Layout.AddChild(&testTexturing, &testTexturingSprite2);
+        }
+        Layout.AddElement(&testTexturing);
+
         GUI_text fpsCounter;
         char* fpsString = (char*)malloc(20);
         fpsCounter.Create("FPS: 60.00", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), "fonts/SUS-8.png", 50);
@@ -180,7 +228,7 @@ namespace Gengine
         //Layout.AddElement(&base);
 
         */
-
+        
         Layout.Compile();
         
         const uint8_t fpsSmoothness = 20;
@@ -213,6 +261,11 @@ namespace Gengine
             fpsCounter.textContent = fpsString;
             fpsCounter.UpdateText();
             Layout.RecalculateSupermesh(fpsCounter.TextElement());
+
+            // Update the button text
+            /*textTest.textContent = fpsString;
+            textTest.UpdateText();
+            Layout.RecalculateSupermesh(textTest.TextElement());*/
 
             // Korrigieren die Mesh aus Mouse Position
             glm::vec3 deltaMouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MouseDeltaPosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);

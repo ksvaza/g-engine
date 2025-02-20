@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <texgen.hpp>
 
 namespace Gengine
 {
@@ -63,6 +64,7 @@ namespace Gengine
         if (Vertices) { free(Vertices); }
         if (Indices) { free(Indices); }
         if (textures) { free(textures); }
+        if (atlas) { free(atlas); }
         *this = Empty();
     }
     void Mesh::Fill(Vertex* vertices, Index* indices)
@@ -456,8 +458,9 @@ namespace Gengine
         {
             destination->AddTexture(source->GetTexture(i));
         }
-        //printf("CopyMesh texture count: %d\n", destination->TextureCount);
-
+        destination->atlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
+        if (!source->atlas || !destination->atlas) { return -1; }
+        *((TextureAtlas*)destination->atlas) = *((TextureAtlas*)source->atlas);
         return 0;
     }
     int MeshGenerator::StichMesh(Mesh* base, Mesh* add)

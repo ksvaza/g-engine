@@ -104,6 +104,7 @@ namespace Gengine
 
         void recursiveAddAttribute(G_UIelement* element, G_UIattribType type);
         void recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type);
+        static void recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas);
     public:
         Shader UIshader;
         glm::mat4 UIviewMatrix;
@@ -133,6 +134,10 @@ namespace Gengine
         static int ResizeUIWindow(G_UIelement* element, glm::vec2 size, float borderWidth, float buttonHeight);
         static int AddUIWindowColours(G_UIelement* element, glm::vec4 colour, glm::vec4 borderColour, glm::vec4 buttonColour);
         static void SortChildren(G_UIelement* parent);
+
+        // Atlas Management functions
+        static int StichAtlas(G_UIelement* parent);
+        static int MapAtlas(G_UIelement* parent);
 
         // UI system functions
         void SetUIshader(Shader shader);

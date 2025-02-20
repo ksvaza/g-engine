@@ -57,7 +57,7 @@ namespace Gengine
             glActiveTexture(GL_TEXTURE0 + i);
             if (!mesh.GetTexture(i).textureID)
             {
-                printf("Empty Texture!\t");
+                //printf("Empty Texture!\t");
                 continue;
             }
             glBindTexture(GL_TEXTURE_2D, mesh.GetTexture(i).textureID);

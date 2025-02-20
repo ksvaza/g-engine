@@ -13,12 +13,14 @@ namespace Gengine
         unsigned char* data = NULL;
         int width, height, nrChannels;
 
-        Texture* textures = NULL;
-        AABox* textureBounds = NULL;
+        Texture** textures = NULL;
+        void* textureBounds = NULL;
         uint16_t textureCount = 0;
 
-        int AddTexture(Texture texture);
+        int AddTexture(Texture* texture);
         int Bake(const char* filepath);
+
+        static TextureAtlas Empty();
     };
     class TextGenerator
     {
