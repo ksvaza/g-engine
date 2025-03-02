@@ -34,3 +34,4 @@
 /code/src/*.js
 /package-lock.json
 /package.json
+/code/build/textures/temp

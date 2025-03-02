@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <texgen.hpp>
+#include <textureatlas.hpp>
 
 namespace Gengine
 {
@@ -27,6 +27,8 @@ namespace Gengine
         mesh.transform.rotation = glm::vec3(0.0f, 0.0f, 0.0f);
         mesh.transform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
         mesh.colour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        mesh.textures = NULL;
+        mesh.atlas = NULL;
         return mesh;
     }
     void Mesh::Create(int vertexCount, int indexCount)
@@ -67,6 +69,12 @@ namespace Gengine
         if (atlas) { free(atlas); }
         *this = Empty();
     }
+    void Mesh::Clear()
+    {
+        if (Vertices) { free(Vertices); }
+        if (Indices) { free(Indices); }
+        if (textures) { free(textures); }
+    }
     void Mesh::Fill(Vertex* vertices, Index* indices)
     {
         if (Vertices)
@@ -103,11 +111,21 @@ namespace Gengine
             Vertices[i].a = a;
         }
     }
-    void Mesh::FillTextureID(int textureID)
+    void Mesh::FillTextureID(int textureID) // soon to be deprecated
     {
         for (int i = 0; i < VertexCount; i++)
         {
             Vertices[i].textureIndex = (float)textureID;
+        }
+    }
+    void Mesh::FillTextureTransform(float tx, float ty, float tw, float th)
+    {
+        for (int i = 0; i < VertexCount; i++)
+        {
+            Vertices[i].tx = tx;
+            Vertices[i].ty = ty;
+            Vertices[i].tw = tw;
+            Vertices[i].th = th;
         }
     }
     void Mesh::SetColour(glm::vec4 colour)
@@ -133,9 +151,10 @@ namespace Gengine
         for (int i = 0; i < VertexCount; i++)
         {
             printf("{\n\tPosition: (%f, %f, %f)\n", Vertices[i].x, Vertices[i].y, Vertices[i].z);
-            printf("\tColor: (%f, %f, %f, %f)\n}", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
+            printf("\tColor: (%f, %f, %f, %f)\n", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
             printf("\tTexture coordinates: (%f, %f)\n", Vertices[i].u, Vertices[i].v);
-            printf("\tTexture index: %d\n", (int)Vertices[i].textureIndex);
+            printf("\tTexture transformation: (%f, %f, %f, %f)\n", Vertices[i].tx, Vertices[i].ty, Vertices[i].tw, Vertices[i].th);
+            printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
             printf("\n");
         }
         printf("Mesh indicies: %d\n", IndexCount);
@@ -243,6 +262,10 @@ namespace Gengine
             Vertices[i].a = 1.0f;
             Vertices[i].u = 0.0f;
             Vertices[i].v = 0.0f;
+            Vertices[i].tx = 0.0f;
+            Vertices[i].ty = 0.0f;
+            Vertices[i].tw = 0.0f;
+            Vertices[i].th = 0.0f;
             Vertices[i].textureIndex = -1.0;
         }
 
@@ -382,9 +405,68 @@ namespace Gengine
             mesh->GetVertices()[i].g = 1.0f;
             mesh->GetVertices()[i].b = 1.0f;
             mesh->GetVertices()[i].a = 1.0f;
+            mesh->GetVertices()[i].tx = 0.0f;
+            mesh->GetVertices()[i].ty = 0.0f;
+            mesh->GetVertices()[i].tw = 0.0f;
+            mesh->GetVertices()[i].th = 0.0f;
             mesh->GetVertices()[i].textureIndex = -1.0;
         }
         MeshGenerator::CalculateTextureCoordinates(mesh);
+
+        return 0;
+    }
+    int MeshGenerator::Rectangle(Mesh* mesh, glm::vec2 size)
+    {
+        mesh->Create(4, 2);
+        Vertex* Vertices = mesh->GetVertices();
+        Index* Indices = mesh->GetIndices();
+
+        // Verticies
+        Vertices[0].x = -size.x / 2.0f;
+        Vertices[0].y = -size.y / 2.0f;
+        Vertices[0].z = 0.0f;
+        Vertices[0].u = 0.0f;
+        Vertices[0].v = 0.0f;
+
+        Vertices[1].x = size.x / 2.0f;
+        Vertices[1].y = -size.y / 2.0f;
+        Vertices[1].z = 0.0f;
+        Vertices[1].u = 1.0f;
+        Vertices[1].v = 0.0f;
+
+        Vertices[2].x = size.x / 2.0f;
+        Vertices[2].y = size.y / 2.0f;
+        Vertices[2].z = 0.0f;
+        Vertices[2].u = 1.0f;
+        Vertices[2].v = 1.0f;
+
+        Vertices[3].x = -size.x / 2.0f;
+        Vertices[3].y = size.y / 2.0f;
+        Vertices[3].z = 0.0f;
+        Vertices[3].u = 0.0f;
+        Vertices[3].v = 1.0f;
+
+        // Indicies
+        Indices[0].I[0] = 0;
+        Indices[0].I[1] = 2;
+        Indices[0].I[2] = 1;
+
+        Indices[1].I[0] = 0;
+        Indices[1].I[1] = 3;
+        Indices[1].I[2] = 2;
+
+        for (int i = 0; i < mesh->VertexCount; i++)
+        {
+            Vertices[i].r = 1.0f;
+            Vertices[i].g = 1.0f;
+            Vertices[i].b = 1.0f;
+            Vertices[i].a = 1.0f;
+            Vertices[i].tx = 0.0f;
+            Vertices[i].ty = 0.0f;
+            Vertices[i].tw = 0.0f;
+            Vertices[i].th = 0.0f;
+            Vertices[i].textureIndex = -1.0;
+        }
 
         return 0;
     }
@@ -428,7 +510,7 @@ namespace Gengine
         for (int i = 0; i < mesh->VertexCount; i++)
         {
             verts[i].u = (verts[i].x - minX) / (maxX - minX);
-            verts[i].v = -(verts[i].y - minY) / (maxY - minY);
+            verts[i].v = (maxY - minY) - (verts[i].y - minY) / (maxY - minY);
         }
 
         return 0;
@@ -535,7 +617,9 @@ namespace Gengine
                 addVertices[i].g * colour.g / baseColour.g, 
                 addVertices[i].b * colour.b / baseColour.b, 
                 addVertices[i].a * colour.a / baseColour.a,
-                addVertices[i].u, addVertices[i].v, addVertices[i].textureIndex
+                addVertices[i].u, addVertices[i].v, 
+                addVertices[i].tx, addVertices[i].ty, addVertices[i].tw, addVertices[i].th,
+                addVertices[i].textureIndex
             };
             newVertices[baseVertexCount + i] = newVertex;
 

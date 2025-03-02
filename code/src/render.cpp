@@ -8,7 +8,7 @@
 
 namespace Gengine
 {
-    int Renderer::DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Texture font)
+    int Renderer::DrawMesh(Mesh mesh, char wireFrame, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
     {
         float* vertexData = (float*)mesh.GetVertices();
         unsigned int* indices = (unsigned int*)mesh.GetIndices();
@@ -18,7 +18,8 @@ namespace Gengine
         shader.SetUniformMat4("uView", viewMatrix);
         shader.SetUniformMat4("uProjection", projectionMatrix);
         shader.SetUniformVec4("uColour", mesh.GetColour());
-
+        shader.SetUniformVec2("uAtlasScale", glm::vec2(((TextureAtlas*)mesh.atlas)->width, ((TextureAtlas*)mesh.atlas)->height));
+        
         // Draw mesh
         // --------------------------------
         unsigned int VBO, VAO, EBO;
@@ -30,46 +31,26 @@ namespace Gengine
         glBindVertexArray(VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);;
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh.VertexCount * 10, vertexData, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh.VertexCount * 14, vertexData, GL_STATIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.IndexCount * 3, indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(7 * sizeof(float)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(7 * sizeof(float)));
         glEnableVertexAttribArray(2);
-
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(9 * sizeof(float)));
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(9 * sizeof(float)));
         glEnableVertexAttribArray(3);
+        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+        glEnableVertexAttribArray(4);
 
-        GLint samplers[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-
-        if (mesh.TextureCount > 16) { shader.SetUniform1iv("uTextures", 16, samplers); }
-        else { shader.SetUniform1iv("uTextures", mesh.TextureCount, samplers); }
-
-        for (int i = 0; i < mesh.TextureCount && i < 16; i++)
-        {
-            glActiveTexture(GL_TEXTURE0 + i);
-            if (!mesh.GetTexture(i).textureID)
-            {
-                //printf("Empty Texture!\t");
-                continue;
-            }
-            glBindTexture(GL_TEXTURE_2D, mesh.GetTexture(i).textureID);
-        }
-        /*for (int i = mesh.TextureCount; i < 32; i++) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, 0); // Or bind a default texture.
-        }*/
-
-        shader.SetUniform1i("uFontTexture", 16);
-        glActiveTexture(GL_TEXTURE0 + 16);
-        glBindTexture(GL_TEXTURE_2D, font.textureID);
+        shader.SetUniform1i("uAtlasTexture", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, ((TextureAtlas*)mesh.atlas)->textureID);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -91,7 +72,7 @@ namespace Gengine
 
         return 0;
     }
-    int Renderer::DrawBoundingBox(Mesh mesh, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+    int Renderer::DrawBoundingBox(Mesh mesh, Shader shader, glm::mat4 viewMatrix, glm::mat4 projectionMatrix) // deprecated
     {
         AABox box = mesh.GetBoundingBox();
         float vertices[] = {

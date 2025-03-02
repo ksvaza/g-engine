@@ -67,7 +67,7 @@ namespace Gengine
         G_UIattribType type = G_EMPTY_ATTRIB;
         char* textContent = NULL;
         uint16_t textLength = 0;
-        char* fontName = NULL;
+        void* font = NULL;
         uint16_t fontSize = 0;
         glm::vec4 textColour = glm::vec4(1.0);
         void* text = NULL;
@@ -112,7 +112,6 @@ namespace Gengine
         HWInputs* Input;
         Window* Gwindow;
         Renderer* Render;
-        Texture fontTexture;
     
         // G_UIelement basic functions
         static void CreateElement(G_UIelement* element, G_UIelementType type);
@@ -145,7 +144,6 @@ namespace Gengine
         void SetUIprojectionMatrix(glm::mat4 projectionMatrix);
         void SetInput(HWInputs* input);
         void SetWindow(Window* window);
-        void SetFontTexture(Texture fontTexture);
         void AddElement(G_UIelement* element);
         void RemoveElement(G_UIelement* element);
         void UpdateAttributeMap();

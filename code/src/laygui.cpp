@@ -9,7 +9,7 @@
 #include <uicreator.hpp>
 #include <uibutton.hpp>
 #include <uislider.hpp>
-#include <texgen.hpp>
+#include <textureatlas.hpp>
 
 using namespace std;
 
@@ -57,11 +57,15 @@ namespace Gengine
     {
         if (element->mesh.TextureCount > 0)
         {
-            printf("Mesh texcount: %d\n", element->mesh.TextureCount);
             for (int i = 0; i < element->mesh.TextureCount; i++)
             {
                 atlas->AddTexture(&element->mesh.textures[i]);
+                atlas->elementReference = (void**)realloc(atlas->elementReference, sizeof(G_UIelement*) * (atlas->textureCount));
+                ((G_UIelement**)atlas->elementReference)[atlas->textureCount - 1] = element;
             }
+            /*atlas->AddTexture(element->mesh.textures);
+            atlas->elementReference = (void**)realloc(atlas->elementReference, sizeof(G_UIelement*) * (atlas->textureCount));
+            ((G_UIelement**)atlas->elementReference)[atlas->textureCount - 1] = element;*/
         }
         for (int i = 0; i < element->childCount; i++)
         {
@@ -409,15 +413,23 @@ namespace Gengine
         recursiveTextureAtlasStich(parent, (TextureAtlas*)parent->mesh.atlas);
 
         // Testing
-        printf("Texture count: %d\n", ((TextureAtlas*)parent->mesh.atlas)->textureCount);
+        //printf("Texture count: %d\n", ((TextureAtlas*)parent->mesh.atlas)->textureCount);
         char* name = (char*)malloc(256);
         sprintf(name, "textures/temp/%lld.bmp", parent->uniqueID);
         ((TextureAtlas*)parent->mesh.atlas)->Bake(name);
-        printf("Atlas stiched\n");
+        //printf("Atlas stiched\n");
         return 0;
     }
     int Glayout::MapAtlas(G_UIelement* parent)
     {
+        TextureAtlas* atlas = (TextureAtlas*)parent->mesh.atlas;
+        for (int i = 0; i < atlas->textureCount; i++)
+        {
+            G_UIelement* element = ((G_UIelement**)atlas->elementReference)[i];
+            AABox bounds = ((AABox*)atlas->textureBounds)[i];
+            element->mesh.FillTextureTransform(bounds.x, bounds.y, bounds.width, bounds.height);
+        }
+
         return 0;
     }
 
@@ -443,10 +455,6 @@ namespace Gengine
     void Glayout::SetWindow(Window* Gwindow)
     {
         this->Gwindow = Gwindow;
-    }
-    void Glayout::SetFontTexture(Texture fontTexture)
-    {
-        this->fontTexture = fontTexture;
     }
     void Glayout::AddElement(G_UIelement* element)
     {
@@ -504,7 +512,7 @@ namespace Gengine
                 }
                 mesh.transform = UI_elementList[i]->transform;
                 //printf("Element texture count: %d\n", mesh.TextureCount);
-                Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix, fontTexture);
+                Render->DrawMesh(mesh, 0, UIshader, UIviewMatrix, UIprojectionMatrix);
                 //Render->DrawBoundingBox(mesh, UIshader, UIviewMatrix, UIprojectionMatrix);
             }
         }

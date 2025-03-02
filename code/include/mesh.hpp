@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <transform.hpp>
 #include <texture.hpp>
-#include <texgen.hpp>
+#include <textureatlas.hpp>
 
 namespace Gengine
 {
@@ -12,6 +12,7 @@ namespace Gengine
         float x, y, z;
         float r, g, b, a;
         float u, v;
+        float tx, ty, tw, th;
         float textureIndex;
     }Vertex;
     typedef struct {
@@ -66,11 +67,13 @@ namespace Gengine
         void Create(int vertexCount, int indicies);
         void Recreate(int vertexCount, int indicies);
         void Delete();
+        void Clear();
         void Fill(Vertex* verticies, Index* indicies);
         Vertex* GetVertices();
         Index* GetIndices();
         void FillColour(float r, float g, float b, float a);
-        void FillTextureID(int textureID);
+        void FillTextureTransform(float tx, float ty, float tw, float th);
+        void FillTextureID(int textureID); // Deprecated
         void SetColour(glm::vec4 colour);
         glm::vec4 GetColour();
         void Print();
@@ -90,6 +93,8 @@ namespace Gengine
     public:
         static int HelloTriangle(Mesh* mesh);
         static int RegularShape(Mesh* mesh, Gshape shape);
+        static int Rectangle(Mesh* mesh, glm::vec2 size);
+
         static int CalculateBounds(Mesh* mesh);
         static int CalculateTextureCoordinates(Mesh* mesh);
         static int CopyMesh(Mesh* destinaton, Mesh* source);

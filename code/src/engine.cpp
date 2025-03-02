@@ -12,7 +12,7 @@
 #include <uislider.hpp>
 #include <uitext.hpp>
 #include <texture.hpp>
-#include <texgen.hpp>
+#include <textureatlas.hpp>
 
 namespace Gengine
 {
@@ -45,11 +45,6 @@ namespace Gengine
         Layout.SetUIviewMatrix(viewMatrix);
         Layout.SetUIprojectionMatrix(projectionMatrix);
         
-        //G_UIelement wElement;
-        //G_UIelementAttribute* wElementButton;
-        //Layout.CreateUIWindow(&wElement, &wElementButton, glm::vec2(960.0, 540.0), glm::vec2(1200.0, 800.0), 2.0, 50.0);
-        //Layout.AddUIWindowColours(&wElement, glm::vec4(1.0, 1.0, 1.0, 1.0), glm::vec4(0.2, 0.2, 0.2, 1.0), glm::vec4(0.7, 0.75, 0.8, 1.0));
-
         Texture baltsTexture;
         baltsTexture.Load("textures/baltsApalsStarpMums.bmp");
         baltsTexture.LoadData("textures/baltsApalsStarpMums.bmp");
@@ -106,7 +101,6 @@ namespace Gengine
             leftPanelSquareMesh.transform.scale = glm::vec3(200.0, 200.0, 1.0);
             leftPanelSquareMesh.SetColour(glm::vec4(1.0));
             leftPanelSquareMesh.AddTexture(baltsTexture);
-            leftPanelSquareMesh.FillTextureID(0);
 
             Layout.CreateElement(&leftPanelSquare, G_MESH);
             leftPanelSquare.mesh = leftPanelSquareMesh;
@@ -116,13 +110,52 @@ namespace Gengine
         Layout.AddChild(&leftPanel, &leftPanelSquare);
 
         Texture font;
-        font.Load("fonts/SUS-8.png");
-        Layout.SetFontTexture(font);
+        font.LoadData("fonts/SUS-8.png");
+
+        TextFont susFont; // fonts/SUS-8
+        susFont.Load("fonts/JetBrainsMonoRegular.fnt");
 
         GUI_text textTest;
-        textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec2(-184.0, 12.0), glm::vec4(1.0, 1.0, 1.0, 1.0), "fonts/SUS-8.png", 24);
+        textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec2(-184.0, 28.0), glm::vec4(1.0, 1.0, 1.0, 1.0), susFont, 40);
         textTest.SetReferenceLayout(&Layout);
         textTest.AddAsChild(leftPanelTopButton.Element());
+
+        TextFont fontArial;
+        fontArial.Load("fonts/arial.fnt");
+        TextFont fontJetBrainsMonoRegular;
+        fontJetBrainsMonoRegular.Load("fonts/JetBrainsMonoRegular.fnt");
+        TextFont fontPerpetua;
+        fontPerpetua.Load("fonts/Perpetua.fnt");
+        TextFont fontTimesNewRoman;
+        fontTimesNewRoman.Load("fonts/TimesNewRoman.fnt");
+
+        G_UIelement textBox;
+        {
+            Mesh textBoxMesh;
+            MeshGen.Rectangle(&textBoxMesh, glm::vec2(760.0, 180.0));
+            textBoxMesh.transform = NewTransform();
+            textBoxMesh.SetColour(glm::vec4(0.8, 0.7, 0.5, 1.0));
+
+            Layout.CreateElement(&textBox, G_PARENT);
+            textBox.mesh = textBoxMesh;
+            textBox.transform = NewTransform();
+            textBox.transform.position = glm::vec3(190.0, -440.0, 0.0);
+        }
+
+        GUI_text textArial;
+        textArial.Create("Hello, Arial!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 80.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontArial, 40);
+        textArial.AddAsChild(&textBox);
+        GUI_text textJetBrainsMonoRegular;
+        textJetBrainsMonoRegular.Create("Hello, JetBrains Mono Regular!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 40.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontJetBrainsMonoRegular, 40);
+        textJetBrainsMonoRegular.AddAsChild(&textBox);
+        GUI_text textPerpetua;
+        textPerpetua.Create("Hello, Perpetua!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 0.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontPerpetua, 40);
+        textPerpetua.AddAsChild(&textBox);
+        GUI_text textTimesNewRoman;
+        textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, -40.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontTimesNewRoman, 40);
+        textTimesNewRoman.AddAsChild(&textBox);
+
+        Layout.AddChild(&leftPanel, &textBox);
 
         Layout.AddElement(&leftPanel);
 
@@ -171,63 +204,9 @@ namespace Gengine
 
         GUI_text fpsCounter;
         char* fpsString = (char*)malloc(20);
-        fpsCounter.Create("FPS: 60.00", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), "fonts/SUS-8.png", 50);
+        fpsCounter.Create("FPS: 60.00", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), susFont, 50);
         fpsCounter.SetReferenceLayout(&Layout);
         fpsCounter.AddToLayout();
-
-        /*
-        
-        G_UIelement element;
-        G_UIelementAttribute* elementButton;
-        {
-            Mesh mesh;
-            MeshGen.RegularShape(&mesh, G_RECTANGLE);
-            mesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.scale = glm::vec3(400, 300, 1.0);
-            mesh.SetColour(glm::vec4(0.2, 0.7, 0.4, 1.0));
-
-            Layout.CreateButton(&element);
-            Layout.AddButtonCallbacks(&element, Layout.DefaultButtonStateChange, Layout.DefaultButtonHoverIn, Layout.DefaultButtonHoverOut, Layout.DefaultButtonPress, Layout.DefaultButtonRelease);
-            element.mesh = mesh;
-            element.transform.position = glm::vec3(200, 100, 0.0);
-            element.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            element.transform.scale = glm::vec3(1.0, 1.0, 1.0);
-            AABox bounds = Layout.CalculateRelativeBounds(&element, -1);
-            Layout.AddButtonBounds(&element, bounds);
-            elementButton = Layout.GetAttributeByType(&element, G_BUTTON_ATTRIB);
-        }
-        //Layout.AddElement(&element);
-
-        G_UIelement base;
-        {
-            Layout.CreateElement(&base, G_PARENT);
-            base.visible = 1;
-            base.transform.position = glm::vec3(0.0, 0.0, 0.0);
-            base.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            base.transform.scale = glm::vec3(1.0, 1.0, 1.0);
-            base.mesh = Mesh::Empty();
-
-            G_UIelement child;
-
-            Mesh mesh;
-            MeshGen.RegularShape(&mesh, G_HEXAGON);
-            mesh.transform.position = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            mesh.transform.scale = glm::vec3(200.0, 200.0, 1.0);
-            mesh.SetColour(glm::vec4(0.7, 0.2, 0.4, 1.0));
-
-            Layout.CreateElement(&child, G_MESH);
-            child.mesh = mesh;
-            child.transform.position = glm::vec3(960.0, 540.0, 0.0);
-            child.transform.rotation = glm::vec3(0.0, 0.0, 0.0);
-            child.transform.scale = glm::vec3(1.0, 1.0, 1.0);
-
-            Layout.AddChild(&base, &child);
-        }
-        //Layout.AddElement(&base);
-
-        */
         
         Layout.Compile();
         

@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-#include <mesh.hpp>
 #include <texture.hpp>
 
 namespace Gengine
@@ -15,6 +14,7 @@ namespace Gengine
 
         Texture** textures = NULL;
         void* textureBounds = NULL;
+        void** elementReference = NULL;
         uint16_t textureCount = 0;
 
         int AddTexture(Texture* texture);

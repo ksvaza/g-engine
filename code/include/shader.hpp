@@ -22,6 +22,7 @@ namespace Gengine
 
         void SetUniformMat4(const char* name, glm::mat4 matrix);
         void SetUniformVec4(const char* name, glm::vec4 vector);
+        void SetUniformVec2(const char* name, glm::vec2 vector);
         void SetUniform1i(const char* name, int value);
         void SetUniform1iv(const char* name, int count, int* values);
 

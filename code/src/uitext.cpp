@@ -2,10 +2,11 @@
 #include <uicreator.hpp>
 #include <stdio.h>
 #include <string.h>
+#include <textfont.hpp>
 
 namespace Gengine
 {
-    void GUI_text::updateText()
+    void GUI_text::updateTextAttribute()
     {
         if (!textAttribute)
         {
@@ -15,7 +16,7 @@ namespace Gengine
         textAttribute->text.textContent = textContent;
         textLength = strlen(textContent);
         textAttribute->text.textLength = textLength;
-        textAttribute->text.fontName = fontName;
+        textAttribute->text.font = &font;
         textAttribute->text.fontSize = fontSize;
         textAttribute->text.textColour = textColour;
     }
@@ -200,25 +201,24 @@ namespace Gengine
         textElement->mesh = textMesh;
     }
 
-    int GUI_text::Create(const char* textContent, glm::vec2 size, glm::vec2 position, glm::vec4 textColour, const char* fontName, uint16_t fontSize)
+    int GUI_text::Create(const char* textContent, glm::vec2 size, glm::vec2 position, glm::vec4 textColour, TextFont font, uint16_t fontSize)
     {
         textElement = (G_UIelement*)malloc(sizeof(G_UIelement));
+        this->size = size;
         this->textContent = (char*)textContent;
         textLength = strlen(textContent);
-        //printf("Text length: %d\n", textLength);
-        this->size = size;
-        this->textColour = textColour;
-        this->fontName = (char*)fontName;
+        this->font = font;
         this->fontSize = fontSize;
+        this->textColour = textColour;
 
         Glayout::CreateElement(textElement, G_TEXT);
         G_UIelementAttribute attribute;
         G_UIattribText text;
         text.type = G_TEXT_ATTRIB;
-        text.textContent = (char*)textContent;
-        text.textLength = textLength;
-        text.fontName = (char*)fontName;
-        text.fontSize = fontSize;
+        text.textContent = this->textContent;
+        text.textLength = this->textLength;
+        text.font = &this->font;
+        text.fontSize = this->fontSize;
         attribute.text = text;
         attribute.text.text = this;
         Glayout::AddAttribute(textElement, attribute);
@@ -226,14 +226,22 @@ namespace Gengine
         textElement->transform = NewTransform();
         textElement->transform.position = glm::vec3(position.x, position.y, 0.0);
 
-        calculateTextMesh();
+        if (this->font.charsCount > 0)
+        {
+            this->font.CalculateTextMesh(&textElement->mesh, textContent, fontSize, textLength, textColour);
+            textElement->mesh.AddTexture(this->font.fontTexture);
+        }
 
         return 0;
     }
     int GUI_text::UpdateText()
     {
-        updateText();
-        calculateTextMesh();
+        updateTextAttribute();
+        if (this->font.charsCount > 0)
+        {
+            this->font.CalculateTextMesh(&textElement->mesh, textContent, fontSize, textLength, textColour);
+            textElement->mesh.AddTexture(this->font.fontTexture);
+        }
         return 0;
     }
     void GUI_text::SetReferenceLayout(Glayout* layout)
@@ -264,6 +272,8 @@ namespace Gengine
     }
     void GUI_text::Delete()
     {
+        free(textContent);
+        font.Free();
         Glayout::DeleteElement(textElement);
     }
 }
