@@ -29,6 +29,7 @@ namespace Gengine
         mesh.colour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         mesh.textures = NULL;
         mesh.atlas = NULL;
+        mesh.atlasBounds = NULL;
         return mesh;
     }
     void Mesh::Create(int vertexCount, int indexCount)
@@ -111,11 +112,11 @@ namespace Gengine
             Vertices[i].a = a;
         }
     }
-    void Mesh::FillTextureID(int textureID) // soon to be deprecated
+    void Mesh::FillTextureID(int textureID) // deprecated
     {
         for (int i = 0; i < VertexCount; i++)
         {
-            Vertices[i].textureIndex = (float)textureID;
+            //Vertices[i].textureIndex = (float)textureID;
         }
     }
     void Mesh::FillTextureTransform(float tx, float ty, float tw, float th)
@@ -154,7 +155,7 @@ namespace Gengine
             printf("\tColor: (%f, %f, %f, %f)\n", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
             printf("\tTexture coordinates: (%f, %f)\n", Vertices[i].u, Vertices[i].v);
             printf("\tTexture transformation: (%f, %f, %f, %f)\n", Vertices[i].tx, Vertices[i].ty, Vertices[i].tw, Vertices[i].th);
-            printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
+            //printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
             printf("\n");
         }
         printf("Mesh indicies: %d\n", IndexCount);
@@ -266,7 +267,7 @@ namespace Gengine
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
             Vertices[i].th = 0.0f;
-            Vertices[i].textureIndex = -1.0;
+            //Vertices[i].textureIndex = -1.0;
         }
 
         mesh->Fill(Vertices, Indices);
@@ -409,7 +410,7 @@ namespace Gengine
             mesh->GetVertices()[i].ty = 0.0f;
             mesh->GetVertices()[i].tw = 0.0f;
             mesh->GetVertices()[i].th = 0.0f;
-            mesh->GetVertices()[i].textureIndex = -1.0;
+            //mesh->GetVertices()[i].textureIndex = -1.0;
         }
         MeshGenerator::CalculateTextureCoordinates(mesh);
 
@@ -465,7 +466,7 @@ namespace Gengine
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
             Vertices[i].th = 0.0f;
-            Vertices[i].textureIndex = -1.0;
+            //Vertices[i].textureIndex = -1.0;
         }
 
         return 0;
@@ -561,14 +562,14 @@ namespace Gengine
         for (int i = 0; i < add->VertexCount; i++)
         {
             newVertices[baseVertexCount + i] = addVertices[i];
-            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
+            /*if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
                 if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
                 {
                     newVertices[baseVertexCount + i].textureIndex = -1.0;
                 }
-            }
+            }*/
         }
 
         for (int i = 0; i < add->IndexCount; i++)
@@ -619,19 +620,19 @@ namespace Gengine
                 addVertices[i].a * colour.a / baseColour.a,
                 addVertices[i].u, addVertices[i].v, 
                 addVertices[i].tx, addVertices[i].ty, addVertices[i].tw, addVertices[i].th,
-                addVertices[i].textureIndex
+                //addVertices[i].textureIndex
             };
             newVertices[baseVertexCount + i] = newVertex;
 
             // Texture index correction
-            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
+            /*if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
                 if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
                 {
                     newVertices[baseVertexCount + i].textureIndex = -1.0;
                 }
-            }
+            }*/
         }
 
         for (int i = 0; i < add->IndexCount; i++)

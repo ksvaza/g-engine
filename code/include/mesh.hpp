@@ -13,7 +13,6 @@ namespace Gengine
         float r, g, b, a;
         float u, v;
         float tx, ty, tw, th;
-        float textureIndex;
     }Vertex;
     typedef struct {
         Vertex V[3];
@@ -59,6 +58,7 @@ namespace Gengine
         Transform transform;
         glm::vec4 colour;
         Texture* textures = NULL;
+        AABox* atlasBounds = NULL;
         int TextureCount = 0;
         void* atlas = NULL;
 

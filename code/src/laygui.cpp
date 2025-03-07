@@ -428,6 +428,8 @@ namespace Gengine
             G_UIelement* element = ((G_UIelement**)atlas->elementReference)[i];
             AABox bounds = ((AABox*)atlas->textureBounds)[i];
             element->mesh.FillTextureTransform(bounds.x, bounds.y, bounds.width, bounds.height);
+            element->mesh.atlasBounds = (AABox*)malloc(sizeof(AABox));
+            *(element->mesh.atlasBounds) = bounds;
         }
 
         return 0;

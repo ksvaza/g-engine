@@ -158,19 +158,29 @@ namespace Gengine
     }
     int TextFont::CalculateTextMesh(Mesh* mesh, const char* text, float fontSize, uint16_t textLength, glm::vec4 textColour)
     {
+        TextureAtlas* tempAtlas = NULL;
+        AABox* tempBounds = NULL;
+        
         if (mesh->atlas)
         {
-            TextureAtlas temp = *(TextureAtlas*)mesh->atlas;
-            printf("Temp texture atlas: %d\n", temp.textureCount);
-            mesh->Delete();
-            mesh->atlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
-            *(TextureAtlas*)mesh->atlas = temp;
+            tempAtlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
+            *tempAtlas = *(TextureAtlas*)mesh->atlas;
+            printf("Temp texture atlas: %d\n", tempAtlas->textureCount);
         }
-        else
+        if (mesh->atlasBounds)
         {
-            mesh->Delete();
+            tempBounds = (AABox*)malloc(sizeof(AABox));
+            *tempBounds = *(AABox*)mesh->atlasBounds;            
         }
-        
+        mesh->Delete();
+        if (tempAtlas)
+        {
+            mesh->atlas = tempAtlas;
+        }
+        if (tempBounds)
+        {
+            mesh->atlasBounds = tempBounds;
+        }
         
 
         if (textLength == 0) { return 0; }
@@ -202,6 +212,10 @@ namespace Gengine
             charMesh.Delete();
         }
         mesh->SetColour(textColour);
+        if (tempBounds)
+        {
+            mesh->FillTextureTransform(tempBounds->x, tempBounds->y, tempBounds->width, tempBounds->height);
+        }
 
         return 0;
     }

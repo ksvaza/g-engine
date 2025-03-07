@@ -139,7 +139,8 @@ namespace Gengine
             Layout.CreateElement(&textBox, G_PARENT);
             textBox.mesh = textBoxMesh;
             textBox.transform = NewTransform();
-            textBox.transform.position = glm::vec3(190.0, -440.0, 0.0);
+            //textBox.transform.position = glm::vec3(190.0, -440.0, 0.0);
+            textBox.transform.position = glm::vec3(960.0, 540.0, 0.0);
         }
 
         GUI_text textArial;
@@ -155,7 +156,8 @@ namespace Gengine
         textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, -40.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontTimesNewRoman, 40);
         textTimesNewRoman.AddAsChild(&textBox);
 
-        Layout.AddChild(&leftPanel, &textBox);
+        //Layout.AddChild(&leftPanel, &textBox);
+        
 
         Layout.AddElement(&leftPanel);
 
@@ -204,15 +206,18 @@ namespace Gengine
 
         GUI_text fpsCounter;
         char* fpsString = (char*)malloc(20);
-        fpsCounter.Create("FPS: 60.00", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), susFont, 50);
+        fpsCounter.Create("FPS: 60.0", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), susFont, 50);
         fpsCounter.SetReferenceLayout(&Layout);
         fpsCounter.AddToLayout();
+
+        Layout.AddElement(&textBox);
         
         Layout.Compile();
         
         const uint8_t fpsSmoothness = 20;
         float fpsArray[fpsSmoothness];
         for (uint8_t i = 0; i < fpsSmoothness; i++) { fpsArray[i] = 60.0; }
+        
 
         TotalTime = 0.0f;
         float deltaTime = 0.0f;
