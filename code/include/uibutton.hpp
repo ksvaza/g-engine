@@ -24,7 +24,7 @@ namespace Gengine
         static void onReleaseCallback(void* button);
         static void onStateChangeCallback(void* button, G_UIattribButton laststate);
     public:
-        int Create(glm::vec2 size, glm::vec2 position, glm::vec4 buttonColour);
+        int Create(glm::vec2 size, glm::vec3 position, glm::vec4 buttonColour);
         int Resize(glm::vec2 size);
         int Recolour(glm::vec4 buttonColour);
         int UpdateBounds();

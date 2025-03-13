@@ -46,6 +46,8 @@ namespace Gengine
             return 3;
         }
 
+        glEnable(GL_DEPTH_TEST);
+
         glViewport(0, 0, width, height);
         Width = width;
         Height = height;

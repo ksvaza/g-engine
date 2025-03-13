@@ -13,6 +13,7 @@ namespace Gengine
         float r, g, b, a;
         float u, v;
         float tx, ty, tw, th;
+        float textureIndex;
     }Vertex;
     typedef struct {
         Vertex V[3];
@@ -58,8 +59,11 @@ namespace Gengine
         Transform transform;
         glm::vec4 colour;
         Texture* textures = NULL;
-        AABox* atlasBounds = NULL;
         int TextureCount = 0;
+        int* textureNameAssociations = NULL;
+        char** textureNames = NULL;
+        uint16_t textureNameCount = 0;
+        AABox* atlasBounds = NULL;
         void* atlas = NULL;
 
         static Mesh Empty();
@@ -72,7 +76,9 @@ namespace Gengine
         Vertex* GetVertices();
         Index* GetIndices();
         void FillColour(float r, float g, float b, float a);
+        void FillColourID(float r, float g, float b, float a, int textureID);
         void FillTextureTransform(float tx, float ty, float tw, float th);
+        void FillTextureTransformID(float tx, float ty, float tw, float th, int textureID);
         void FillTextureID(int textureID); // Deprecated
         void SetColour(glm::vec4 colour);
         glm::vec4 GetColour();
@@ -94,6 +100,7 @@ namespace Gengine
         static int HelloTriangle(Mesh* mesh);
         static int RegularShape(Mesh* mesh, Gshape shape);
         static int Rectangle(Mesh* mesh, glm::vec2 size);
+        static int Cube(Mesh* mesh, glm::vec3 size);
 
         static int CalculateBounds(Mesh* mesh);
         static int CalculateTextureCoordinates(Mesh* mesh);
@@ -101,5 +108,8 @@ namespace Gengine
         static int StichMesh(Mesh* base, Mesh* add);
         static int AddMesh(Mesh* base, Mesh* add);
         static int TransformMesh(Mesh* mesh, Transform transform);
+
+        static int LoadOBJ(Mesh* mesh, const char* path);
+        static int LoadMTL(Mesh* mesh, const char* path);
     };
 }

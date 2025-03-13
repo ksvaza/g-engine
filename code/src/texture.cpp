@@ -11,7 +11,7 @@ namespace Gengine
         data = stbi_load(filepath, &width, &height, &nrChannels, 0);
         if (!data)
         {
-            printf("Failed to load texture\n");
+            printf("Failed to load texture %s\n", filepath);
             return -1;
         }
         return 0;

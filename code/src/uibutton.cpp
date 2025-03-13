@@ -4,7 +4,7 @@
 
 namespace Gengine
 {
-    int GUI_button::Create(glm::vec2 size, glm::vec2 position, glm::vec4 buttonColour)
+    int GUI_button::Create(glm::vec2 size, glm::vec3 position, glm::vec4 buttonColour)
     {
         buttonElement = (G_UIelement*)malloc(sizeof(G_UIelement));
 
@@ -33,7 +33,7 @@ namespace Gengine
         buttonAttribute = Glayout::GetAttributeByType(buttonElement, G_BUTTON_ATTRIB);
         buttonElement->mesh = buttonMesh;
         buttonElement->transform = NewTransform();
-        buttonElement->transform.position = glm::vec3(position.x, position.y, 0.0);
+        buttonElement->transform.position = position;
 
         return 0;
     }

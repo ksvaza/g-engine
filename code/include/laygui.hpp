@@ -7,7 +7,6 @@
 #include <transform.hpp>
 #include <hwinputs.hpp>
 #include <winlib.hpp>
-#include <render.hpp>
 #include <vector>
 #include <map>
 
@@ -85,6 +84,7 @@ namespace Gengine
         Mesh mesh;
         Mesh supermesh;
         int8_t visible = 1;
+        uint8_t isActive = 1;
         intptr_t uniqueID = 0;
         G_UIelementType type = G_EMPTY;
         Transform transform;
@@ -104,14 +104,17 @@ namespace Gengine
 
         void recursiveAddAttribute(G_UIelement* element, G_UIattribType type);
         void recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type);
+        void sortAttributeMap(G_UIattribType type);
         static void recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas);
     public:
         Shader UIshader;
         glm::mat4 UIviewMatrix;
         glm::mat4 UIprojectionMatrix;
-        HWInputs* Input;
-        Window* Gwindow;
-        Renderer* Render;
+        HWInputs* Input = NULL;
+        Window* Gwindow = NULL;
+        Renderer* Render = NULL;
+
+        G_UIelement* ActiveElement = NULL;
     
         // G_UIelement basic functions
         static void CreateElement(G_UIelement* element, G_UIelementType type);

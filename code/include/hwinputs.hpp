@@ -19,6 +19,7 @@ namespace Gengine
         char MouseButton[_MAX_MOUSE_BUTTON_COUNT];
         char MouseButtonDown[_MAX_MOUSE_BUTTON_COUNT];
         char MouseButtonUp[_MAX_MOUSE_BUTTON_COUNT];
+        GLenum Status;
     }MouseInputs;
     typedef struct {
         int Key[_MAX_KEY_COUNT];

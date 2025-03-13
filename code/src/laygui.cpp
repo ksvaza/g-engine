@@ -53,6 +53,22 @@ namespace Gengine
             recursiveRemoveAttribute(element->children[i], type);
         }
     }
+    void Glayout::sortAttributeMap(G_UIattribType type)
+    {
+        // Sort attribute map by depth where largest value is first
+        for (int i = 0; i < (int)UI_attributeMap[type].size(); i++)
+        {
+            for (int j = 0; j < (int)UI_attributeMap[type].size() - 1; j++)
+            {
+                if (UI_attributeMap[type][j]->transform.position.z < UI_attributeMap[type][j + 1]->transform.position.z)
+                {
+                    G_UIelement* temp = UI_attributeMap[type][j];
+                    UI_attributeMap[type][j] = UI_attributeMap[type][j + 1];
+                    UI_attributeMap[type][j + 1] = temp;
+                }
+            }
+        }
+    }
     void Glayout::recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas)
     {
         if (element->mesh.TextureCount > 0)
@@ -81,6 +97,7 @@ namespace Gengine
         element->mesh = Mesh::Empty();
         element->supermesh = Mesh::Empty();
         element->visible = 1;
+        element->isActive = 0;
         element->uniqueID = (intptr_t)element;
         element->type = type;
         Transform transform;
@@ -466,6 +483,8 @@ namespace Gengine
         
         recursiveAddAttribute(element, G_BUTTON_ATTRIB);
         recursiveAddAttribute(element, G_SLIDER_ATTRIB);
+        sortAttributeMap(G_BUTTON_ATTRIB);
+        sortAttributeMap(G_SLIDER_ATTRIB);
     }
     void Glayout::RemoveElement(G_UIelement* element)
     {
@@ -500,6 +519,7 @@ namespace Gengine
     }
     void Glayout::DrawElements()
     {
+        glClear(GL_DEPTH_BUFFER_BIT);
         for (uint16_t i = 0; i < UI_elementCount; i++)
         {
             if (UI_elementList[i]->visible)
@@ -569,10 +589,12 @@ namespace Gengine
 
             sliderClass->Precalculate();
         }
+        ActiveElement = NULL;
         return 0;
     }
     void Glayout::Update()
     {
+        if (Input->Mouse.Status != GLFW_CURSOR_NORMAL) { return; }
         for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
         {
             G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
@@ -640,10 +662,12 @@ namespace Gengine
                         }
                         button->pressedWith[mb] = 1;
                         changed = 1;
-                        if (noOtherPressed)
+                        if (noOtherPressed && !ActiveElement)
                         {
                             button->isPressed = 1;
                             if (button->onPress) { button->onPress(button->button); }
+                            element->isActive = 1;
+                            ActiveElement = element;
                         }
                     }
                 }
@@ -654,6 +678,8 @@ namespace Gengine
                     {
                         button->isPressed = 0;
                         if (button->onRelease) { button->onRelease(button->button); }
+                        ActiveElement->isActive = 0;
+                        ActiveElement = NULL;
                     }
                     if (button->pressedWith[mb])
                     {
@@ -735,10 +761,12 @@ namespace Gengine
                         }
                         slider->pressedWith[mb] = 1;
                         changed = 1;
-                        if (noOtherPressed)
+                        if (noOtherPressed && !ActiveElement)
                         {
                             slider->isPressed = 1;
                             if (slider->onPress) { slider->onPress(slider->slider); }
+                            element->isActive = 1;
+                            ActiveElement = element;
                         }
                     }
                 }
@@ -749,6 +777,8 @@ namespace Gengine
                     {
                         slider->isPressed = 0;
                         if (slider->onRelease) { slider->onRelease(slider->slider); }
+                        ActiveElement->isActive = 0;
+                        ActiveElement = NULL;
                     }
                     if (slider->pressedWith[mb])
                     {

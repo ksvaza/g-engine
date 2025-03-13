@@ -25,7 +25,7 @@ namespace Gengine
         uint16_t fontSize = 0;
         glm::vec4 textColour = glm::vec4(1.0);
         
-        int Create(const char* textContent, glm::vec2 size, glm::vec2 position, glm::vec4 textColour, TextFont font, uint16_t fontSize);
+        int Create(const char* textContent, glm::vec2 size, glm::vec3 position, glm::vec4 textColour, TextFont font, uint16_t fontSize);
         int Resize(glm::vec2 size);
         int Recolour(glm::vec4 textColour);
         int UpdateText();

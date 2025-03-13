@@ -89,6 +89,7 @@ namespace Gengine
     void HWInputs::SetMouseStatus(GLFWwindow* window, GLenum status)
     {
         glfwSetInputMode(window, GLFW_CURSOR, status);
+        Mouse.Status = status;
     }
     glm::vec2 HWInputs::ConvertPixelToScreenSpace(glm::vec2 pixelPosition, glm::vec2 screenSize)
     {

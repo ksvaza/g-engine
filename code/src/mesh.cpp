@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <textureatlas.hpp>
+#include <string.h>
 
 namespace Gengine
 {
@@ -30,6 +31,8 @@ namespace Gengine
         mesh.textures = NULL;
         mesh.atlas = NULL;
         mesh.atlasBounds = NULL;
+        mesh.textureNames = NULL;
+        mesh.textureNameAssociations = NULL;
         return mesh;
     }
     void Mesh::Create(int vertexCount, int indexCount)
@@ -68,6 +71,14 @@ namespace Gengine
         if (Indices) { free(Indices); }
         if (textures) { free(textures); }
         if (atlas) { free(atlas); }
+        if (textureNames && textureNameCount > 0)
+        {
+            for (int i = 0; i < textureNameCount; i++)
+            {
+                free(textureNames[i]);
+            }
+            free(textureNames);
+        }
         *this = Empty();
     }
     void Mesh::Clear()
@@ -112,11 +123,24 @@ namespace Gengine
             Vertices[i].a = a;
         }
     }
+    void Mesh::FillColourID(float r, float g, float b, float a, int textureID)
+    {
+        for (int i = 0; i < VertexCount; i++)
+        {
+            if (Vertices[i].textureIndex == (float)textureID)
+            {
+                if (r >= 0.0) { Vertices[i].r = r; }
+                if (g >= 0.0) { Vertices[i].g = g; }
+                if (b >= 0.0) { Vertices[i].b = b; }
+                if (a >= 0.0) { Vertices[i].a = a; }
+            }
+        }
+    }
     void Mesh::FillTextureID(int textureID) // deprecated
     {
         for (int i = 0; i < VertexCount; i++)
         {
-            //Vertices[i].textureIndex = (float)textureID;
+            Vertices[i].textureIndex = (float)textureID;
         }
     }
     void Mesh::FillTextureTransform(float tx, float ty, float tw, float th)
@@ -127,6 +151,19 @@ namespace Gengine
             Vertices[i].ty = ty;
             Vertices[i].tw = tw;
             Vertices[i].th = th;
+        }
+    }
+    void Mesh::FillTextureTransformID(float tx, float ty, float tw, float th, int textureID)
+    {
+        for (int i = 0; i < VertexCount; i++)
+        {
+            if (Vertices[i].textureIndex == (float)textureID)
+            {
+                Vertices[i].tx = tx;
+                Vertices[i].ty = ty;
+                Vertices[i].tw = tw;
+                Vertices[i].th = th;
+            }
         }
     }
     void Mesh::SetColour(glm::vec4 colour)
@@ -155,7 +192,7 @@ namespace Gengine
             printf("\tColor: (%f, %f, %f, %f)\n", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
             printf("\tTexture coordinates: (%f, %f)\n", Vertices[i].u, Vertices[i].v);
             printf("\tTexture transformation: (%f, %f, %f, %f)\n", Vertices[i].tx, Vertices[i].ty, Vertices[i].tw, Vertices[i].th);
-            //printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
+            printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
             printf("\n");
         }
         printf("Mesh indicies: %d\n", IndexCount);
@@ -199,12 +236,22 @@ namespace Gengine
     }
     void Mesh::AddTexture(Texture texture)
     {
+        if (TextureCount == 0 && textures)
+        {
+            printf("Texture count is 0 but textures is not NULL\n");
+            textures = NULL;
+        }
         TextureCount++;
         textures = (Texture*)realloc(textures, sizeof(Texture) * TextureCount);
         textures[TextureCount - 1] = texture;
     }
     Texture Mesh::GetTexture(int index)
     {
+        if (!textures)
+        {
+            printf("Textures is NULL\n");
+            return textures[0];
+        }
         return textures[index];
     }
     void Mesh::SetTransform(Transform transform)
@@ -267,7 +314,7 @@ namespace Gengine
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
             Vertices[i].th = 0.0f;
-            //Vertices[i].textureIndex = -1.0;
+            Vertices[i].textureIndex = -1.0;
         }
 
         mesh->Fill(Vertices, Indices);
@@ -410,7 +457,7 @@ namespace Gengine
             mesh->GetVertices()[i].ty = 0.0f;
             mesh->GetVertices()[i].tw = 0.0f;
             mesh->GetVertices()[i].th = 0.0f;
-            //mesh->GetVertices()[i].textureIndex = -1.0;
+            mesh->GetVertices()[i].textureIndex = -1.0;
         }
         MeshGenerator::CalculateTextureCoordinates(mesh);
 
@@ -466,9 +513,69 @@ namespace Gengine
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
             Vertices[i].th = 0.0f;
-            //Vertices[i].textureIndex = -1.0;
+            Vertices[i].textureIndex = -1.0;
         }
 
+        return 0;
+    }
+    int MeshGenerator::Cube(Mesh* mesh, glm::vec3 size)
+    {
+        mesh->Create(24, 12);
+
+        float unx = size.x / 2.0f;
+        float uny = size.y / 2.0f;
+        float unz = size.z / 2.0f;
+
+        // Verticies
+        float vertices[] = {
+            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+
+            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+
+            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+
+             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+
+            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+
+            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0
+        };
+        // Indicies
+        unsigned int indices[] = {
+            0, 1, 2,
+            2, 3, 0,
+            4, 5, 6,
+            6, 7, 4,
+            8, 9, 10,
+            10, 11, 8,
+            12, 13, 14,
+            14, 15, 12,
+            16, 17, 18,
+            18, 19, 16,
+            20, 21, 22,
+            22, 23, 20
+        };
+
+        mesh->Fill((Vertex*)vertices, (Index*)indices);
+        
         return 0;
     }
     int MeshGenerator::CalculateBounds(Mesh* mesh)
@@ -518,7 +625,7 @@ namespace Gengine
     }
     int MeshGenerator::CopyMesh(Mesh* destination, Mesh* source)
     {
-        destination->Recreate(source->VertexCount, source->IndexCount);
+        destination->Create(source->VertexCount, source->IndexCount);
         Vertex* destVerts = destination->GetVertices();
         Vertex* sourceVerts = source->GetVertices();
         Index* destIndices = destination->GetIndices();
@@ -539,7 +646,9 @@ namespace Gengine
         destination->SetTransform(source->GetTransform());
         for (int i = 0; i < source->TextureCount; i++)
         {
-            destination->AddTexture(source->GetTexture(i));
+            Texture t = source->GetTexture(i);
+            destination->AddTexture(t);
+            //destination->AddTexture(source->GetTexture(i));
         }
         destination->atlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
         if (!source->atlas || !destination->atlas) { return -1; }
@@ -562,14 +671,10 @@ namespace Gengine
         for (int i = 0; i < add->VertexCount; i++)
         {
             newVertices[baseVertexCount + i] = addVertices[i];
-            /*if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
+            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
-                if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
-                {
-                    newVertices[baseVertexCount + i].textureIndex = -1.0;
-                }
-            }*/
+            }
         }
 
         for (int i = 0; i < add->IndexCount; i++)
@@ -620,19 +725,15 @@ namespace Gengine
                 addVertices[i].a * colour.a / baseColour.a,
                 addVertices[i].u, addVertices[i].v, 
                 addVertices[i].tx, addVertices[i].ty, addVertices[i].tw, addVertices[i].th,
-                //addVertices[i].textureIndex
+                addVertices[i].textureIndex
             };
             newVertices[baseVertexCount + i] = newVertex;
 
             // Texture index correction
-            /*if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
+            if (newVertices[baseVertexCount + i].textureIndex >= 0.0 && newVertices[baseVertexCount + i].textureIndex < 16.0)
             {
                 newVertices[baseVertexCount + i].textureIndex += (float)baseTextureCount;
-                if (newVertices[baseVertexCount + i].textureIndex >= 16.0)
-                {
-                    newVertices[baseVertexCount + i].textureIndex = -1.0;
-                }
-            }*/
+            }
         }
 
         for (int i = 0; i < add->IndexCount; i++)
@@ -662,6 +763,206 @@ namespace Gengine
             glm::vec4 p = m * glm::vec4(verts[i].x, verts[i].y, verts[i].z, 1.0f);
             verts[i].x = p.x; verts[i].y = p.y; verts[i].z = p.z;
         }
+
+        return 0;
+    }
+    int MeshGenerator::LoadOBJ(Mesh* mesh, const char* path)
+    {
+        FILE* file = fopen(path, "r");
+        if (!file)
+        {
+            printf("Failed to open file: %s\n", path);
+            return -1;
+        }
+
+        // First pass to count vertices and indices
+        int vertexCount = 0;
+        int indexCount = 0;
+        int textureCount = 0;
+        char line[128];
+        while (fgets(line, 128, file))
+        {
+            if (line[0] == 'v' && line[1] == ' ')
+            {
+                vertexCount++;
+            }
+            else if (line[0] == 'f' && line[1] == ' ')
+            {
+                indexCount++;
+            }
+            else if (line[0] == 'u' && line[1] == 's' && line[2] == 'e' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
+            {
+                textureCount++;
+            }
+        }
+        fseek(file, 0, SEEK_SET);
+
+        mesh->Delete();
+        mesh->Create(vertexCount, indexCount);
+        mesh->textureNames = (char**)malloc(sizeof(char*) * textureCount);
+        mesh->textureNameCount = textureCount;
+        Vertex* vertices = mesh->GetVertices();
+        Index* indices = mesh->GetIndices();
+
+        // Second pass to fill vertices and indices
+        int vertexIndex = 0;
+        int uvIndex = 0;
+        int indexIndex = 0;
+        int mtlIndex = -1;
+        char mtlPath[128];
+        memset(mtlPath, 0, 128);
+        while (fgets(line, 128, file))
+        {
+            if (line[0] == 'v' && line[1] == ' ')
+            {
+                float x, y, z;
+                int res = sscanf(line, "v %f %f %f", &x, &y, &z);
+                if (res < 3) { printf("Failed to read vertex\n"); }
+                vertices[vertexIndex].x = x;
+                vertices[vertexIndex].y = y;
+                vertices[vertexIndex].z = z;
+                vertices[vertexIndex].r = 1.0f;
+                vertices[vertexIndex].g = 1.0f;
+                vertices[vertexIndex].b = 1.0f;
+                vertices[vertexIndex].a = 1.0f;
+                vertices[vertexIndex].u = 0.0f;
+                vertices[vertexIndex].v = 0.0f;
+                vertices[vertexIndex].tx = 0.0f;
+                vertices[vertexIndex].ty = 0.0f;
+                vertices[vertexIndex].tw = 0.0f;
+                vertices[vertexIndex].th = 0.0f;
+                vertices[vertexIndex].textureIndex = -1.0;
+                vertexIndex++;
+            }
+            else if (line[0] == 'v' && line[1] == 't' && line[2] == ' ')
+            {
+                float u, v;
+                int res = sscanf(line, "vt %f %f", &u, &v);
+                vertices[uvIndex].u = u;
+                vertices[uvIndex].v = 0.0;
+                if (res > 1) { vertices[uvIndex].v = v; }
+                else if (res < 1) { printf("Failed to read texture coordinates\n"); }
+                uvIndex++;
+            }
+            else if (line[0] == 'f' && line[1] == ' ')
+            {
+                int i0, i1, i2;
+                int res = sscanf(line, "f %d %d %d", &i0, &i1, &i2);
+                if (res < 3) { printf("Failed to read face\n"); }
+                indices[indexIndex].I[0] = i0 - 1;
+                indices[indexIndex].I[1] = i1 - 1;
+                indices[indexIndex].I[2] = i2 - 1;
+                indexIndex++;
+                vertices[i0 - 1].textureIndex = mtlIndex;
+                vertices[i1 - 1].textureIndex = mtlIndex;
+                vertices[i2 - 1].textureIndex = mtlIndex;
+            }
+            else if (line[0] == 'm' && line[1] == 't' && line[2] == 'l' && line[3] == 'l' && line[4] == 'i' && line[5] == 'b')
+            {
+                sscanf(line, "mtllib %s", mtlPath);
+            }
+            else if (line[0] == 'u' && line[1] == 's' && line[2] == 'e' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
+            {
+                mtlIndex++;
+                mesh->textureNames[mtlIndex] = (char*)malloc(sizeof(char) * 128);
+                sscanf(line, "usemtl %128s", mesh->textureNames[mtlIndex]);
+                //printf("Texture name: %s\n", mesh->textureNames[mtlIndex]);
+            }
+        }
+        
+        // Load MTL file
+        if (mtlPath[0] != '\0')
+        {
+            char mtlFullPath[128];
+            memset(mtlFullPath, 0, 128);
+            strcpy(mtlFullPath, path);
+            char* lastSlash = strrchr(mtlFullPath, '/');
+            if (lastSlash)
+            {
+                lastSlash[1] = '\0';
+                strcat(mtlFullPath, mtlPath);
+            }
+            LoadMTL(mesh, mtlFullPath);
+        }
+
+        fclose(file);
+
+        return 0;
+    }
+    int MeshGenerator::LoadMTL(Mesh* mesh, const char* path)
+    {
+        //printf("Loading MTL file: %s\n", path);
+        FILE* file = fopen(path, "r");
+        if (!file)
+        {
+            printf("Failed to open file: %s\n", path);
+            return -1;
+        }
+
+        // First pass to count color texture file associations
+        int textureNameCount = 0;
+        int textureCount = 0;
+        char line[128];
+        while (fgets(line, 128, file))
+        {
+            if (line[0] == 'n' && line[1] == 'e' && line[2] == 'w' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
+            {
+                textureNameCount++;
+            }
+            else if (line[0] == 'm' && line[1] == 'a' && line[2] == 'p' && line[3] == '_')
+            {
+                textureCount++;
+            }
+        }
+        fseek(file, 0, SEEK_SET);
+        mesh->textureNameAssociations = (int*)malloc(sizeof(int) * textureNameCount);
+        for (int i = 0; i < textureNameCount; i++)
+        {
+            mesh->textureNameAssociations[i] = -1;
+        }
+        // Second pass to load each texture file and associate it with a name
+        int currentName = 0;
+        while (fgets(line, 128, file))
+        {
+            if (line[0] == 'n' && line[1] == 'e' && line[2] == 'w' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
+            {
+                char name[128];
+                sscanf(line, "newmtl %128s", name);
+                for (int i = 0; i < mesh->textureNameCount; i++)
+                {
+                    if (strcmp(mesh->textureNames[i], name) == 0)
+                    {
+                        currentName = i;
+                        break;
+                    }
+                }
+            }
+            else if (line[0] == 'K' && line[1] == 'd')
+            {
+                float r, g, b;
+                sscanf(line, "Kd %f %f %f", &r, &g, &b);
+                mesh->FillColourID(r, g, b, -1.0, currentName);
+            }
+            else if (line[0] == 'd' && line[1] == ' ')
+            {
+                float a;
+                sscanf(line, "d %f", &a);
+                mesh->FillColourID(-1.0, -1.0, -1.0, a, currentName);
+            }
+            else if (line[0] == 'm' && line[1] == 'a' && line[2] == 'p' && line[3] == '_')
+            {
+                char texturePath[128];
+                sscanf(line, "map_Kd %128s", texturePath);
+                
+                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                if (!texture) { return -1; }
+                texture->LoadData(texturePath);
+                mesh->AddTexture(*texture);
+                mesh->textureNameAssociations[currentName] = mesh->TextureCount - 1;
+            }
+        }
+
+        fclose(file);
 
         return 0;
     }

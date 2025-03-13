@@ -25,6 +25,7 @@ namespace Gengine
         Mesh knobMesh;
         MeshGenerator::RegularShape(&knobMesh, G_RECTANGLE);
         knobMesh.transform = NewTransform();
+        knobMesh.transform.position = glm::vec3(0.0, 0.0, 0.1);
         knobMesh.transform.scale = glm::vec3(knobSize.x, knobSize.y, 1.0);
         this->knobSize = knobSize;
         knobMesh.SetColour(knobColour);

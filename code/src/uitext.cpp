@@ -201,7 +201,7 @@ namespace Gengine
         textElement->mesh = textMesh;
     }
 
-    int GUI_text::Create(const char* textContent, glm::vec2 size, glm::vec2 position, glm::vec4 textColour, TextFont font, uint16_t fontSize)
+    int GUI_text::Create(const char* textContent, glm::vec2 size, glm::vec3 position, glm::vec4 textColour, TextFont font, uint16_t fontSize)
     {
         textElement = (G_UIelement*)malloc(sizeof(G_UIelement));
         this->size = size;
@@ -224,7 +224,7 @@ namespace Gengine
         Glayout::AddAttribute(textElement, attribute);
         textAttribute = Glayout::GetAttributeByType(textElement, G_TEXT_ATTRIB);
         textElement->transform = NewTransform();
-        textElement->transform.position = glm::vec3(position.x, position.y, 0.0);
+        textElement->transform.position = position;
 
         if (this->font.charsCount > 0)
         {

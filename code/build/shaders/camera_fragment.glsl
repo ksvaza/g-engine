@@ -20,16 +20,4 @@ void main()
         //FragColor = vec4(1.0, 0.0, 1.0, 1.0);
         FragColor = oColour;
     }
-    if (oTexCoords.x < 0.0)
-    {
-        FragColor.r = 1.0;
-    }
-    if (oTexCoords.y < 0.0)
-    {
-        FragColor.g = 1.0;
-    }
-    if (FragColor.a < 0.25)
-    {
-        discard;
-    }
 }

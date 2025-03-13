@@ -165,7 +165,6 @@ namespace Gengine
         {
             tempAtlas = (TextureAtlas*)malloc(sizeof(TextureAtlas));
             *tempAtlas = *(TextureAtlas*)mesh->atlas;
-            printf("Temp texture atlas: %d\n", tempAtlas->textureCount);
         }
         if (mesh->atlasBounds)
         {

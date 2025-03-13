@@ -6,6 +6,7 @@
 #include <render.hpp>
 #include <mesh.hpp>
 #include <laygui.hpp>
+#include <game.hpp>
 
 namespace Gengine
 {
@@ -18,6 +19,7 @@ namespace Gengine
         Renderer Render;
         MeshGenerator MeshGen;
         Glayout Layout;
+        GameWorld Game;
         int Update(float deltaTime);
     public:
         float TotalTime;

@@ -13,6 +13,10 @@
 #include <uitext.hpp>
 #include <texture.hpp>
 #include <textureatlas.hpp>
+#include <camera.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
 
 namespace Gengine
 {
@@ -37,11 +41,16 @@ namespace Gengine
         shader.Read("shaders/UIshader_fragment.glsl", GL_FRAGMENT_SHADER);
         shader.Compile();
 
+        Shader cameraShader;
+        cameraShader.Read("shaders/camera_vertex.glsl", GL_VERTEX_SHADER);
+        cameraShader.Read("shaders/camera_fragment.glsl", GL_FRAGMENT_SHADER);
+        cameraShader.Compile();
+
         Layout.SetUIshader(shader);
         Layout.SetInput(&Input);
         Layout.SetWindow(&Gwindow);
         glm::mat4 viewMatrix = glm::mat4(1.0);
-        glm::mat4 projectionMatrix = OrthographicMatrix(0.0f, 1920.0f, 0.0f, 1080.0f, -1.0f, 1.0f);
+        glm::mat4 projectionMatrix = OrthographicMatrix(0.0f, 1920.0f, 0.0f, 1080.0f, -10.0f, 10.0f);
         Layout.SetUIviewMatrix(viewMatrix);
         Layout.SetUIprojectionMatrix(projectionMatrix);
         
@@ -67,7 +76,7 @@ namespace Gengine
             Mesh leftPanelMesh;
             MeshGen.RegularShape(&leftPanelMesh, G_RECTANGLE);
             leftPanelMesh.transform = NewTransform();
-            leftPanelMesh.transform.position = glm::vec3(0.0, /*44*/0.0, 0.0);
+            leftPanelMesh.transform.position = glm::vec3(0.0, /*44*/0.0, -1.0);
             leftPanelMesh.transform.scale = glm::vec3(400.0, /*200.0*/1080.0, 1.0);
             leftPanelMesh.SetColour(glm::vec4(0.5, 0.5, 0.5, 1.0));
 
@@ -78,7 +87,7 @@ namespace Gengine
         }
 
         GUI_button leftPanelTopButton;
-        leftPanelTopButton.Create(glm::vec2(380.0, 50.0), glm::vec2(0.0, 505.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelTopButton.Create(glm::vec2(380.0, 50.0), glm::vec3(0.0, 505.0, 0.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
         leftPanelTopButton.SetReferenceLayout(&Layout);
         leftPanelTopButton.AddAsChild(&leftPanel);
 
@@ -88,7 +97,7 @@ namespace Gengine
         leftPanelSlider.AddAsChild(&leftPanel);
 
         GUI_button leftPanelSliderButton;
-        leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec2(165.0, 445.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec3(165.0, 445.0, 0.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
         leftPanelSliderButton.SetReferenceLayout(&Layout);
         leftPanelSliderButton.AddAsChild(&leftPanel);
 
@@ -116,7 +125,7 @@ namespace Gengine
         susFont.Load("fonts/JetBrainsMonoRegular.fnt");
 
         GUI_text textTest;
-        textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec2(-184.0, 28.0), glm::vec4(1.0, 1.0, 1.0, 1.0), susFont, 40);
+        textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec3(-184.0, 28.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), susFont, 40);
         textTest.SetReferenceLayout(&Layout);
         textTest.AddAsChild(leftPanelTopButton.Element());
 
@@ -144,19 +153,19 @@ namespace Gengine
         }
 
         GUI_text textArial;
-        textArial.Create("Hello, Arial!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 80.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontArial, 40);
+        textArial.Create("Hello, Arial!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 80.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontArial, 40);
         textArial.AddAsChild(&textBox);
         GUI_text textJetBrainsMonoRegular;
-        textJetBrainsMonoRegular.Create("Hello, JetBrains Mono Regular!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 40.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontJetBrainsMonoRegular, 40);
+        textJetBrainsMonoRegular.Create("Hello, JetBrains Mono Regular!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 40.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontJetBrainsMonoRegular, 40);
         textJetBrainsMonoRegular.AddAsChild(&textBox);
         GUI_text textPerpetua;
-        textPerpetua.Create("Hello, Perpetua!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, 0.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontPerpetua, 40);
+        textPerpetua.Create("Hello, Perpetua!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 0.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontPerpetua, 40);
         textPerpetua.AddAsChild(&textBox);
         GUI_text textTimesNewRoman;
-        textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec2(-380.0, -40.0), glm::vec4(1.0, 1.0, 1.0, 1.0), fontTimesNewRoman, 40);
+        textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, -40.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontTimesNewRoman, 40);
         textTimesNewRoman.AddAsChild(&textBox);
 
-        //Layout.AddChild(&leftPanel, &textBox);
+        Layout.AddChild(&leftPanel, &textBox);
         
 
         Layout.AddElement(&leftPanel);
@@ -201,22 +210,59 @@ namespace Gengine
             testTexturingSprite2.transform = NewTransform();
             testTexturingSprite2.transform.position = glm::vec3(50.0, 0.0, 0.0);
             Layout.AddChild(&testTexturing, &testTexturingSprite2);
+
+            GUI_button testTexturingButton;
+            testTexturingButton.Create(glm::vec2(200.0, 200.0), glm::vec3(0.0, 0.0, 1.0), glm::vec4(1.0));
+            testTexturingButton.SetReferenceLayout(&Layout);
+            testTexturingButton.AddAsChild(&testTexturing);
         }
-        Layout.AddElement(&testTexturing);
+        //Layout.AddElement(&testTexturing);
 
         GUI_text fpsCounter;
         char* fpsString = (char*)malloc(20);
-        fpsCounter.Create("FPS: 60.0", glm::vec2(100.0, 50.0), glm::vec2(0.0, 1080.0), glm::vec4(1.0, 0.6, 0.0, 1.0), susFont, 50);
+        fpsCounter.Create("FPS: 60.0", glm::vec2(100.0, 50.0), glm::vec3(0.0, 1080.0, 2), glm::vec4(1.0, 0.6, 0.0, 1.0), susFont, 50);
         fpsCounter.SetReferenceLayout(&Layout);
         fpsCounter.AddToLayout();
 
-        Layout.AddElement(&textBox);
+        //Layout.AddElement(&textBox);
         
         Layout.Compile();
+
+        // Game setup
+        GameObject testObject;
+        testObject.Create();
+        MeshGen.LoadOBJ(&testObject.mesh, "models/Carismus/tinker.obj");
+        testObject.BakeTextures();
+        testObject.mesh.transform = NewTransform();
+        testObject.transform = NewTransform();
+        testObject.transform.position = glm::vec3(0.0, 0.0, -1.0);
+        testObject.mesh.SetColour(glm::vec4(1.0, 1.0, 1.0, 1.0));
+        //testObject.mesh.Print();
+        /*MeshGen.Cube(&testObject.mesh, glm::vec3(1.0, 1.0, 1.0));
+        testObject.mesh.transform = NewTransform();
+        testObject.transform = NewTransform();
+        testObject.transform.position = glm::vec3(0.0, 0.0, -1.0);
+        testObject.mesh.SetColour(glm::vec4(1.0, 1.0, 1.0, 1.0));
+        Texture stoneTexture;
+        stoneTexture.LoadData("textures/Stone.bmp");
+        testObject.mesh.AddTexture(stoneTexture);
+        testObject.BakeTexture();*/
+        Game.AddGameObject(&testObject);
+
+        Camera testCamera;
+        testCamera.Create();
+        testCamera.transform.position = glm::vec3(0.0, 0.0, 1.0);
+        testCamera.shader = cameraShader;
+        Game.AddGameObject(&testCamera);
+        Game.ActiveCamera = &testCamera;
+
         
         const uint8_t fpsSmoothness = 20;
         float fpsArray[fpsSmoothness];
         for (uint8_t i = 0; i < fpsSmoothness; i++) { fpsArray[i] = 60.0; }
+
+        float speed = 50;
+        const float sensitivity = 200.0;
         
 
         TotalTime = 0.0f;
@@ -229,9 +275,8 @@ namespace Gengine
 
             Update(deltaTime);
 
-            Render.Clear(glm::vec4(1.0));
+            Render.Clear(glm::vec4(0.9));
             Layout.Update();
-            Input.Update();
 
             // Calculate the FPS
             for (uint8_t i = 0; i < fpsSmoothness - 1; i++) { fpsArray[i] = fpsArray[i + 1]; }
@@ -299,9 +344,67 @@ namespace Gengine
             }
             timeSinceLastAngle++;
 
+            speed = leftPanelSlider.Value() * 50.0;
+
+            glm::vec3 cameraImpulse = glm::vec3(0.0);
+            if (Input.Keyboard.Key[GLFW_KEY_W])
+            {
+                //testCamera.transform.position.z -= deltaTime * 2.5;
+                cameraImpulse.z -= deltaTime * speed;
+            }
+            if (Input.Keyboard.Key[GLFW_KEY_S])
+            {
+                //testCamera.transform.position.z += deltaTime * 2.5;
+                cameraImpulse.z += deltaTime * speed;
+            }
+            if (Input.Keyboard.Key[GLFW_KEY_A])
+            {
+                //testCamera.transform.position.x -= deltaTime * 2.5;
+                cameraImpulse.x -= deltaTime * speed;
+            }
+            if (Input.Keyboard.Key[GLFW_KEY_D])
+            {
+                //testCamera.transform.position.x += deltaTime * 2.5;
+                cameraImpulse.x += deltaTime * speed;
+            }
+            if (Input.Keyboard.Key[GLFW_KEY_LEFT_SHIFT])
+            {
+                //testCamera.transform.position.y -= deltaTime * 2.5;
+                cameraImpulse.y -= deltaTime * speed;
+            }
+            if (Input.Keyboard.Key[GLFW_KEY_SPACE])
+            {
+                //testCamera.transform.position.y += deltaTime * 2.5;
+                cameraImpulse.y += deltaTime * speed;
+            }
+            cameraImpulse = glm::vec3(glm::yawPitchRoll(glm::radians(testCamera.transform.rotation.y), glm::radians(testCamera.transform.rotation.x), glm::radians(testCamera.transform.rotation.z)) * glm::vec4(cameraImpulse, 0.0));
+            testCamera.transform.position += cameraImpulse;
+
+            if (Input.Mouse.MouseButtonDown[GLFW_MOUSE_BUTTON_LEFT] && !Layout.ActiveElement)
+            {
+                //printf("Mouse button pressed\n");
+                Input.SetMouseStatus(window, GLFW_CURSOR_DISABLED);
+            }
+            else if (Input.Mouse.MouseButtonUp[GLFW_MOUSE_BUTTON_LEFT] && !Layout.ActiveElement)
+            {
+                //printf("Mouse button released\n");
+                Input.SetMouseStatus(window, GLFW_CURSOR_NORMAL);
+            }
+            if (Input.Mouse.MouseButton[GLFW_MOUSE_BUTTON_LEFT] && !Layout.ActiveElement)
+            {
+                testCamera.transform.rotation.y -= Input.Mouse.MouseDeltaPosition.x * sensitivity / Gwindow.Width;
+                testCamera.transform.rotation.x += Input.Mouse.MouseDeltaPosition.y * sensitivity / Gwindow.Height;
+            }
+            //printf("Delta mouse world position: %f, %f\n", Input.Mouse.MouseDeltaPosition.x, Input.Mouse.MouseDeltaPosition.y);
+
+
             /*leftPanel.transform.rotation = glm::vec3(0.0, 0.0, 360.0 * leftPanelSlider.Value() / 5.0);*/
+            Game.UpdateGameObjects();
+            Game.DrawGameObjects();
             
             Layout.DrawElements();
+
+            Input.Update();
 
             glfwSwapBuffers(window);
             glfwPollEvents();
