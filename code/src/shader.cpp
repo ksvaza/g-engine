@@ -104,26 +104,37 @@ namespace Gengine {
     
     void Shader::SetUniformMat4(const char* name, glm::mat4 matrix)
     {
+        glUseProgram(shaderProgram);
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
     }
     void Shader::SetUniformVec4(const char* name, glm::vec4 vector)
     {
+        glUseProgram(shaderProgram);
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniform4fv(location, 1, glm::value_ptr(vector));
     }
+    void Shader::SetUniformVec3(const char* name, glm::vec3 vector)
+    {
+        glUseProgram(shaderProgram);
+        unsigned int location = glGetUniformLocation(shaderProgram, name);
+        glUniform3fv(location, 1, glm::value_ptr(vector));
+    }
     void Shader::SetUniformVec2(const char* name, glm::vec2 vector)
     {
+        glUseProgram(shaderProgram);
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniform2fv(location, 1, glm::value_ptr(vector));
     }
     void Shader::SetUniform1i(const char* name, int value)
     {
+        glUseProgram(shaderProgram);
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniform1i(location, value);
     }
     void Shader::SetUniform1iv(const char* name, int count, int* values)
     {
+        glUseProgram(shaderProgram);
         unsigned int location = glGetUniformLocation(shaderProgram, name);
         glUniform1iv(location, count, values);
     }

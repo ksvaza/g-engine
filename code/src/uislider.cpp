@@ -1,12 +1,12 @@
 #include "../include/uislider.hpp"
-#include <uicreator.hpp>
+#include <uielement.hpp>
 #include <stdio.h>
 
 namespace Gengine
 {
-    int GUI_slider::Create(float minValue, float maxValue, GUI_alignment orientation, glm::vec2 size, glm::vec2 knobSize, glm::vec2 position, glm::vec4 railColour, glm::vec4 knobColour)
+    int GUI_slider::Create(float minValue, float maxValue, float defaultValue, GUI_alignment orientation, glm::vec2 size, glm::vec2 knobSize, glm::vec3 position, glm::vec4 railColour, glm::vec4 knobColour)
     {
-        railElement = (G_UIelement*)malloc(sizeof(G_UIelement));
+        element = (G_UIelement*)malloc(sizeof(G_UIelement));
         knobElement = (G_UIelement*)malloc(sizeof(G_UIelement));
 
         Mesh railMesh;
@@ -17,10 +17,10 @@ namespace Gengine
         railMesh.SetColour(railColour);
         this->railColour = railColour;
 
-        Glayout::CreateElement(railElement, G_PARENT);
-        railElement->mesh = railMesh;
-        railElement->transform = NewTransform();
-        railElement->transform.position = glm::vec3(position.x, position.y, 0.0);
+        Glayout::CreateElement(element, G_PARENT);
+        element->mesh = railMesh;
+        element->transform = NewTransform();
+        element->transform.position = position;
 
         Mesh knobMesh;
         MeshGenerator::RegularShape(&knobMesh, G_RECTANGLE);
@@ -31,7 +31,7 @@ namespace Gengine
         knobMesh.SetColour(knobColour);
 
         Glayout::CreateElement(knobElement, G_SLIDER);
-        G_UIelementAttribute attribute;
+        G_UIelementAttribute sAttribute;
         G_UIattribSlider slider;
         for (int i = 0; i < _MAX_MOUSE_BUTTON_COUNT; i++) { slider.pressedWith[i] = 0; }
         slider.type = G_SLIDER_ATTRIB;
@@ -44,35 +44,37 @@ namespace Gengine
         slider.onPositionUpdate = onPositionUpdate;
         this->minValue = minValue;
         this->maxValue = maxValue;
-        this->value = minValue;
+        this->value = defaultValue;
         this->orientation = orientation;
-        attribute.slider = slider;
-        attribute.slider.slider = this;
-        Glayout::AddAttribute(knobElement, attribute);
-        sliderAttribute = Glayout::GetAttributeByType(knobElement, G_SLIDER_ATTRIB);
+        sAttribute.slider = slider;
+        sAttribute.slider.slider = this;
+        Glayout::AddAttribute(knobElement, sAttribute);
+        attribute = Glayout::GetAttributeByType(knobElement, G_SLIDER_ATTRIB);
         knobElement->mesh = knobMesh;
         knobElement->transform = NewTransform();
         if (orientation == GUI_HORIZONTAL)
         {
-            knobElement->transform.position = glm::vec3(-(size.x - knobSize.x) / 2.0, 0.0, 0.0);
+            //knobElement->transform.position = glm::vec3(-(size.x - knobSize.x) / 2.0, 0.0, 0.0);
+            knobElement->transform.position.x = -(size.x - knobSize.x) / 2.0 + (defaultValue - minValue) / (maxValue - minValue) * (size.x - knobSize.x);
         }
         else if (orientation == GUI_VERTICAL)
         {
-            knobElement->transform.position = glm::vec3(0.0, -(size.y - knobSize.y) / 2.0, 0.0);
+            //knobElement->transform.position = glm::vec3(0.0, -(size.y - knobSize.y) / 2.0, 0.0);
+            knobElement->transform.position.y = -(size.y - knobSize.y) / 2.0 + (defaultValue - minValue) / (maxValue - minValue) * (size.y - knobSize.y);
         }
-        Glayout::AddChild(railElement, knobElement);
+        Glayout::AddChild(element, knobElement);
 
         return 0;
     }
     int GUI_slider::UpdateBounds()
     {
         AABox knobBounds = Glayout::CalculateRelativeBounds(knobElement, -1);
-        if (!sliderAttribute)
+        if (!attribute)
         {
             printf("Attribute not found!\n");
             return -1;
         }
-        sliderAttribute->slider.bounds = knobBounds;
+        attribute->slider.bounds = knobBounds;
         return 0;
     }
     int GUI_slider::UpdateMesh()
@@ -196,16 +198,16 @@ namespace Gengine
     {
         if (referenceLayout)
         {
-            referenceLayout->AddElement(railElement);
+            referenceLayout->AddElement(element);
         }
     }
     void GUI_slider::AddAsChild(G_UIelement *parent)
     {
-        Glayout::AddChild(parent, railElement);
+        Glayout::AddChild(parent, element);
     }
-    G_UIelement* GUI_slider::RailElement()
+    G_UIelement* GUI_slider::Element()
     {
-        return railElement;
+        return element;
     }
     G_UIelement* GUI_slider::KnobElement()
     {
@@ -215,11 +217,11 @@ namespace Gengine
     {
         if (referenceLayout)
         {
-            referenceLayout->RemoveElement(railElement);
+            referenceLayout->RemoveElement(element);
         }
     }
     void GUI_slider::Delete()
     {
-        Glayout::DeleteElement(railElement);
+        Glayout::DeleteElement(element);
     }
 }

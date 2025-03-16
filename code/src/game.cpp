@@ -23,7 +23,7 @@ namespace Gengine
     {
         //printf("GameObject updated\n");
     }
-    int GameObject::BakeTexture()
+    int GameObject::BakeTexture() // Deprecated
     {
         // Atlas Stiching
         free(mesh.atlas);
@@ -38,7 +38,7 @@ namespace Gengine
         ((GameObject**)((TextureAtlas*)mesh.atlas)->elementReference)[0] = this;
         
         char* name = (char*)malloc(256);
-        sprintf(name, "textures/temp/GameObject_%p.bmp", this);
+        sprintf(name, "textures/temp/GameObject_%p.bmp", (void*)this);
         ((TextureAtlas*)mesh.atlas)->Bake(name);
 
         // Atlas Mapping
@@ -66,15 +66,15 @@ namespace Gengine
         }
         
         char* name = (char*)malloc(256);
-        sprintf(name, "textures/temp/GameObject_%p.bmp", this);
+        sprintf(name, "textures/temp/GameObject_%p.bmp", (void*)this);
         ((TextureAtlas*)mesh.atlas)->Bake(name);
 
         // Atlas Mapping
         TextureAtlas* atlas = (TextureAtlas*)mesh.atlas;
         mesh.FillTextureTransform(0.0, 0.0, 0.0, 0.0);
-        for (int i = 0; i < mesh.textureNameCount; i++)
+        for (int i = 0; i < mesh.materialCount; i++)
         {
-            int current = mesh.textureNameAssociations[i];
+            int current = mesh.materialTextureAssociations[i];
             if (current == -1) { continue; }
             AABox bounds = ((AABox*)atlas->textureBounds)[current];
             mesh.FillTextureTransformID(bounds.x, bounds.y, bounds.width, bounds.height, i);
@@ -142,7 +142,7 @@ namespace Gengine
                         Mesh mesh = Mesh::Empty();
                         MeshGenerator::CopyMesh(&mesh, &gameObjects[i]->mesh);
                         MeshGenerator::TransformMesh(&mesh, gameObjects[i]->mesh.GetTransform());
-                        mesh.SetTransform();
+                        mesh.SetTransform(gameObjects[i]->transform);
                         Render->DrawMesh(mesh, 0, shader, viewMatrix, projectionMatrix);
                         mesh.Delete();
                     }

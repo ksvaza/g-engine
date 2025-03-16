@@ -28,6 +28,7 @@ namespace Gengine
         G_BUTTON_ATTRIB = 0x01,
         G_SLIDER_ATTRIB = 0x02,
         G_TEXT_ATTRIB = 0x03,
+        G_DROPDOWN_ATTRIB = 0x04,
     };
 
     // Structs and Unions
@@ -71,12 +72,27 @@ namespace Gengine
         glm::vec4 textColour = glm::vec4(1.0);
         void* text = NULL;
     };
+    struct G_UIattribDropdown {
+        G_UIattribType type = G_EMPTY_ATTRIB;
+        AABox bounds = { 0.0, 0.0, 0.0, 0.0 };
+        void (*onStateChange)(void*, G_UIattribDropdown) = NULL;
+        void (*onHoverIn)(void*) = NULL;
+        void (*onHoverOut)(void*) = NULL;
+        void (*onPress)(void*) = NULL;
+        void (*onRelease)(void*) = NULL;
+        char isActive = 1;
+        char isHovered = 0;
+        char isPressed = 0;
+        char pressedWith[_MAX_MOUSE_BUTTON_COUNT];
+        void* forwarder = NULL;
+    };
 
     union G_UIelementAttribute {
         G_UIattribType type = G_EMPTY_ATTRIB;
         G_UIattribButton button;
         G_UIattribSlider slider;
         G_UIattribText text;
+        G_UIattribDropdown dropdown;
         G_UIelementAttribute() {}
         ~G_UIelementAttribute() {}
     };
@@ -84,7 +100,7 @@ namespace Gengine
         Mesh mesh;
         Mesh supermesh;
         int8_t visible = 1;
-        uint8_t isActive = 1;
+        uint8_t isActive = 0;
         intptr_t uniqueID = 0;
         G_UIelementType type = G_EMPTY;
         Transform transform;
@@ -100,11 +116,12 @@ namespace Gengine
     private:
         G_UIelement** UI_elementList = NULL;
         uint16_t UI_elementCount = 0;
-        std::map<G_UIattribType, std::vector<G_UIelement*>> UI_attributeMap;
+        std::map<G_UIattribType, std::vector<G_UIelement*>> UI_attributeMap; // soon to be deprecated
+        std::map<G_UIelement*, std::map<G_UIattribType, G_UIelementAttribute*>> UI_attributeMap2;
 
         void recursiveAddAttribute(G_UIelement* element, G_UIattribType type);
         void recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type);
-        void sortAttributeMap(G_UIattribType type);
+        void sortAttributeMap();
         static void recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas);
     public:
         Shader UIshader;
@@ -121,6 +138,7 @@ namespace Gengine
         static void DeleteElement(G_UIelement* element);
         static void AddAttribute(G_UIelement* element, G_UIelementAttribute attribute);
         static void AddChild(G_UIelement* parent, G_UIelement* child);
+        static int RemoveChild(G_UIelement* parent, G_UIelement* child);
         static G_UIelementAttribute* GetAttributeByType(G_UIelement* element, G_UIattribType type);
         static int8_t HasAttribute(G_UIelement* element, G_UIattribType type);
         static G_UIelement* GetChildByType(G_UIelement* element, G_UIelementType type);

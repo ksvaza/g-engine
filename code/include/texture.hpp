@@ -9,7 +9,7 @@ namespace Gengine
         unsigned int textureID = 0U;
 
         unsigned char* data = NULL;
-        int width, height, nrChannels;
+        int width = 0, height = 0, nrChannels = 0;
 
         void* atlas = NULL; 
         int16_t atlasIndex = -1;
@@ -17,5 +17,6 @@ namespace Gengine
         int LoadData(const char* data);
         void FreeData();
         int Load(const char* path);
+        static Texture Empty();
     };
 }

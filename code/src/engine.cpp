@@ -6,11 +6,13 @@
 #include <hwinputs.hpp>
 #include <render.hpp>
 #include <mesh.hpp>
+#include <meshloader.hpp>
 #include <shader.hpp>
 #include <laygui.hpp>
 #include <uibutton.hpp>
 #include <uislider.hpp>
 #include <uitext.hpp>
+#include <uidropdown.hpp>
 #include <texture.hpp>
 #include <textureatlas.hpp>
 #include <camera.hpp>
@@ -37,13 +39,13 @@ namespace Gengine
     int Engine::Run()
     {
         Shader shader;
-        shader.Read("shaders/UIshader_vertex.glsl", GL_VERTEX_SHADER);
-        shader.Read("shaders/UIshader_fragment.glsl", GL_FRAGMENT_SHADER);
+        shader.Read("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/shaders/UIshader_vertex.glsl", GL_VERTEX_SHADER);
+        shader.Read("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/shaders/UIshader_fragment.glsl", GL_FRAGMENT_SHADER);
         shader.Compile();
 
         Shader cameraShader;
-        cameraShader.Read("shaders/camera_vertex.glsl", GL_VERTEX_SHADER);
-        cameraShader.Read("shaders/camera_fragment.glsl", GL_FRAGMENT_SHADER);
+        cameraShader.Read("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/shaders/camera_vertex.glsl", GL_VERTEX_SHADER);
+        cameraShader.Read("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/shaders/camera_fragment.glsl", GL_FRAGMENT_SHADER);
         cameraShader.Compile();
 
         Layout.SetUIshader(shader);
@@ -55,15 +57,15 @@ namespace Gengine
         Layout.SetUIprojectionMatrix(projectionMatrix);
         
         Texture baltsTexture;
-        baltsTexture.Load("textures/baltsApalsStarpMums.bmp");
-        baltsTexture.LoadData("textures/baltsApalsStarpMums.bmp");
+        baltsTexture.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/textures/baltsApalsStarpMums.bmp");
+        baltsTexture.LoadData("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/textures/baltsApalsStarpMums.bmp");
 
         Texture greenTexture;
-        greenTexture.Load("textures/zalsStarpMums.bmp");
-        greenTexture.LoadData("textures/zalsStarpMums.bmp");
+        greenTexture.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/textures/zalsStarpMums.bmp");
+        greenTexture.LoadData("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/textures/zalsStarpMums.bmp");
 
         Texture redTexture;
-        redTexture.LoadData("textures/sarkansApalsStarpMums.bmp");
+        redTexture.LoadData("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/textures/sarkansApalsStarpMums.bmp");
 
         TextureAtlas atlas;
         atlas.AddTexture(&greenTexture);
@@ -92,7 +94,7 @@ namespace Gengine
         leftPanelTopButton.AddAsChild(&leftPanel);
 
         GUI_slider leftPanelSlider;
-        leftPanelSlider.Create(0.0, 5.0, GUI_HORIZONTAL, glm::vec2(320.0, 50.0), glm::vec2(30.0, 50.0), glm::vec2(-30.0, 445.0), glm::vec4(0.4, 0.4, 0.4, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelSlider.Create(0.0, 5.0, 2.5, GUI_HORIZONTAL, glm::vec2(320.0, 50.0), glm::vec2(30.0, 50.0), glm::vec3(-30.0, 445.0, 0.0), glm::vec4(0.4, 0.4, 0.4, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
         leftPanelSlider.SetReferenceLayout(&Layout);
         leftPanelSlider.AddAsChild(&leftPanel);
 
@@ -100,6 +102,11 @@ namespace Gengine
         leftPanelSliderButton.Create(glm::vec2(50.0, 50.0), glm::vec3(165.0, 445.0, 0.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
         leftPanelSliderButton.SetReferenceLayout(&Layout);
         leftPanelSliderButton.AddAsChild(&leftPanel);
+
+        GUI_dropdown leftPanelDropdown;
+        leftPanelDropdown.Create(5, 0, glm::vec2(380.0, 50.0), glm::vec3(0.0, 385.0, 0.0), glm::vec4(0.7, 0.7, 0.7, 1.0), glm::vec4(0.7, 0.7, 0.7, 1.0));
+        leftPanelDropdown.SetReferenceLayout(&Layout);
+        leftPanelDropdown.AddAsChild(&leftPanel);
 
         G_UIelement leftPanelSquare;
         {
@@ -116,13 +123,13 @@ namespace Gengine
             leftPanelSquare.transform = NewTransform();
             leftPanelSquare.transform.position = glm::vec3(0.0, 0.0, 0.0);
         }
-        Layout.AddChild(&leftPanel, &leftPanelSquare);
+        //Layout.AddChild(&leftPanel, &leftPanelSquare);
 
         Texture font;
-        font.LoadData("fonts/SUS-8.png");
+        font.LoadData("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/SUS-8.png");
 
         TextFont susFont; // fonts/SUS-8
-        susFont.Load("fonts/JetBrainsMonoRegular.fnt");
+        susFont.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/JetBrainsMonoRegular.fnt");
 
         GUI_text textTest;
         textTest.Create("Hello, World!", glm::vec2(380.0, 50.0), glm::vec3(-184.0, 28.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), susFont, 40);
@@ -130,13 +137,13 @@ namespace Gengine
         textTest.AddAsChild(leftPanelTopButton.Element());
 
         TextFont fontArial;
-        fontArial.Load("fonts/arial.fnt");
+        fontArial.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/arial.fnt");
         TextFont fontJetBrainsMonoRegular;
-        fontJetBrainsMonoRegular.Load("fonts/JetBrainsMonoRegular.fnt");
+        fontJetBrainsMonoRegular.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/JetBrainsMonoRegular.fnt");
         TextFont fontPerpetua;
-        fontPerpetua.Load("fonts/Perpetua.fnt");
+        fontPerpetua.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/Perpetua.fnt");
         TextFont fontTimesNewRoman;
-        fontTimesNewRoman.Load("fonts/TimesNewRoman.fnt");
+        fontTimesNewRoman.Load("C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/fonts/TimesNewRoman.fnt");
 
         G_UIelement textBox;
         {
@@ -153,17 +160,17 @@ namespace Gengine
         }
 
         GUI_text textArial;
-        textArial.Create("Hello, Arial!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 80.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontArial, 40);
-        textArial.AddAsChild(&textBox);
+        textArial.Create("Hello, Arial!", glm::vec2(380.0, 50.0), glm::vec3(-190.0, 20.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontArial, 40);
+        textArial.AddAsChild(leftPanelDropdown.DropElement(1));
         GUI_text textJetBrainsMonoRegular;
-        textJetBrainsMonoRegular.Create("Hello, JetBrains Mono Regular!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 40.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontJetBrainsMonoRegular, 40);
-        textJetBrainsMonoRegular.AddAsChild(&textBox);
+        textJetBrainsMonoRegular.Create("Hello, JetBrains Mono Regular!", glm::vec2(380.0, 50.0), glm::vec3(-190.0, 20.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontJetBrainsMonoRegular, 40);
+        textJetBrainsMonoRegular.AddAsChild(leftPanelDropdown.DropElement(2));
         GUI_text textPerpetua;
-        textPerpetua.Create("Hello, Perpetua!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, 0.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontPerpetua, 40);
-        textPerpetua.AddAsChild(&textBox);
+        textPerpetua.Create("Hello, Perpetua!", glm::vec2(380.0, 50.0), glm::vec3(-190.0, 20.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontPerpetua, 40);
+        textPerpetua.AddAsChild(leftPanelDropdown.DropElement(3));
         GUI_text textTimesNewRoman;
-        textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec3(-380.0, -40.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontTimesNewRoman, 40);
-        textTimesNewRoman.AddAsChild(&textBox);
+        textTimesNewRoman.Create("Hello, Times New Roman!", glm::vec2(380.0, 50.0), glm::vec3(-190.0, 20.0, 0.1), glm::vec4(0.0, 0.0, 0.0, 1.0), fontTimesNewRoman, 40);
+        textTimesNewRoman.AddAsChild(leftPanelDropdown.DropElement(4));
 
         Layout.AddChild(&leftPanel, &textBox);
         
@@ -228,10 +235,13 @@ namespace Gengine
         
         Layout.Compile();
 
+
         // Game setup
+        // ------------
+
         GameObject testObject;
         testObject.Create();
-        MeshGen.LoadOBJ(&testObject.mesh, "models/Carismus/tinker.obj");
+        MeshLoader::LoadOBJ(&testObject.mesh, "C:/Users/ksvaz/Documents/Skola/Programmesana/C/g-engine/code/build/models/Fusion/VerkisB.obj");
         testObject.BakeTextures();
         testObject.mesh.transform = NewTransform();
         testObject.transform = NewTransform();
@@ -263,6 +273,7 @@ namespace Gengine
 
         float speed = 50;
         const float sensitivity = 200.0;
+        glm::vec3 lightDirection = glm::vec3(0.0, 0.0, 0.0); // in euler angles
         
 
         TotalTime = 0.0f;
@@ -289,12 +300,12 @@ namespace Gengine
             sprintf(fpsString, "FPS: %3.1f", fps);
             fpsCounter.textContent = fpsString;
             fpsCounter.UpdateText();
-            Layout.RecalculateSupermesh(fpsCounter.TextElement());
+            Layout.RecalculateSupermesh(fpsCounter.Element());
 
             // Update the button text
             /*textTest.textContent = fpsString;
             textTest.UpdateText();
-            Layout.RecalculateSupermesh(textTest.TextElement());*/
+            Layout.RecalculateSupermesh(textTest.Element());*/
 
             // Korrigieren die Mesh aus Mouse Position
             glm::vec3 deltaMouseWorldPos = glm::vec3(Input.ConvertPixelToWorldSpace(Input.Mouse.MouseDeltaPosition, glm::vec2(Gwindow.Width, Gwindow.Height), viewMatrix, projectionMatrix), 0.0);
@@ -344,7 +355,7 @@ namespace Gengine
             }
             timeSinceLastAngle++;
 
-            speed = leftPanelSlider.Value() * 50.0;
+            speed = leftPanelSlider.Value() * 20.0;
 
             glm::vec3 cameraImpulse = glm::vec3(0.0);
             if (Input.Keyboard.Key[GLFW_KEY_W])
@@ -380,12 +391,12 @@ namespace Gengine
             cameraImpulse = glm::vec3(glm::yawPitchRoll(glm::radians(testCamera.transform.rotation.y), glm::radians(testCamera.transform.rotation.x), glm::radians(testCamera.transform.rotation.z)) * glm::vec4(cameraImpulse, 0.0));
             testCamera.transform.position += cameraImpulse;
 
-            if (Input.Mouse.MouseButtonDown[GLFW_MOUSE_BUTTON_LEFT] && !Layout.ActiveElement)
+            if ((Input.Mouse.MouseButtonDown[GLFW_MOUSE_BUTTON_LEFT] || Input.Mouse.MouseButtonDown[GLFW_MOUSE_BUTTON_RIGHT]) && !Layout.ActiveElement)
             {
                 //printf("Mouse button pressed\n");
                 Input.SetMouseStatus(window, GLFW_CURSOR_DISABLED);
             }
-            else if (Input.Mouse.MouseButtonUp[GLFW_MOUSE_BUTTON_LEFT] && !Layout.ActiveElement)
+            else if ((Input.Mouse.MouseButtonUp[GLFW_MOUSE_BUTTON_LEFT] || Input.Mouse.MouseButtonUp[GLFW_MOUSE_BUTTON_RIGHT]) && !Layout.ActiveElement)
             {
                 //printf("Mouse button released\n");
                 Input.SetMouseStatus(window, GLFW_CURSOR_NORMAL);
@@ -394,7 +405,18 @@ namespace Gengine
             {
                 testCamera.transform.rotation.y -= Input.Mouse.MouseDeltaPosition.x * sensitivity / Gwindow.Width;
                 testCamera.transform.rotation.x += Input.Mouse.MouseDeltaPosition.y * sensitivity / Gwindow.Height;
+                //testObject.transform.rotation.x += Input.Mouse.MouseDeltaPosition.y * sensitivity / Gwindow.Height;
+                //testObject.transform.rotation.y -= Input.Mouse.MouseDeltaPosition.x * sensitivity / Gwindow.Width;
             }
+            if (Input.Mouse.MouseButton[GLFW_MOUSE_BUTTON_RIGHT] && !Layout.ActiveElement)
+            {
+                lightDirection.x -= Input.Mouse.MouseDeltaPosition.y * sensitivity / Gwindow.Width;
+                lightDirection.y += Input.Mouse.MouseDeltaPosition.x * sensitivity / Gwindow.Height;
+                //printf("Light direction: %f, %f\n", lightDirection.x, lightDirection.y);
+            }
+            glm::vec3 lightDirectionVector = glm::vec3(glm::yawPitchRoll((float)glm::radians(lightDirection.y), (float)glm::radians(lightDirection.x), 0.0f) * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+            //printf("Light direction vector: %f, %f, %f\n", lightDirectionVector.x, lightDirectionVector.y, lightDirectionVector.z);
+            cameraShader.SetUniformVec3("uLightDir", lightDirectionVector);
             //printf("Delta mouse world position: %f, %f\n", Input.Mouse.MouseDeltaPosition.x, Input.Mouse.MouseDeltaPosition.y);
 
 

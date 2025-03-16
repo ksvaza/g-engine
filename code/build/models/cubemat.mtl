@@ -4,12 +4,12 @@
 # Kd 0.0 1.0 1.0
 # d 1.0
 
-# newmtl matB
-# Kd 1.0 1.0 1.0
-# d 1.0
-# map_Kd textures/Stone.bmp
+newmtl stone
+Kd 1.0 1.0 1.0
+d 1.0
+map_Kd ../textures/Stone.bmp
 
 newmtl grass
 Kd 1.0 1.0 1.0
 d 1.0
-map_Kd textures/grass.bmp
+map_Kd ../textures/grass.bmp

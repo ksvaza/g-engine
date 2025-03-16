@@ -58,4 +58,16 @@ namespace Gengine
         stbi_image_free(data);
         return 0;
     }
+    Texture Texture::Empty()
+    {
+        Texture texture;
+        texture.textureID = 0U;
+        texture.data = NULL;
+        texture.width = 0;
+        texture.height = 0;
+        texture.nrChannels = 0;
+        texture.atlas = NULL;
+        texture.atlasIndex = -1;
+        return texture;
+    }
 }

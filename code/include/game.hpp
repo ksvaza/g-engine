@@ -17,7 +17,7 @@ namespace Gengine
 
         virtual void Create();
         virtual void Delete();
-        int BakeTexture();
+        int BakeTexture(); // Deprecated
         int BakeTextures();
     };
 

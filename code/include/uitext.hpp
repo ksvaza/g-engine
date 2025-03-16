@@ -1,22 +1,22 @@
 #pragma once
 #include <stdint.h>
 #include <laygui.hpp>
-#include <uicreator.hpp>
+#include <uielement.hpp>
 #include <glm/glm.hpp>
 #include <textfont.hpp>
 
 namespace Gengine
 {
-    class GUI_text
+    class GUI_text : public GUI_element
     {
     private:
-        Glayout* referenceLayout = NULL;
-        G_UIelement* textElement = NULL;
-        G_UIelementAttribute* textAttribute = NULL;
+        //Glayout* referenceLayout = NULL;
+        //G_UIelement* element = NULL;
+        //G_UIelementAttribute* attribute = NULL;
         void updateTextAttribute();
-        void getPositionofChar(char symbol, glm::vec2* index);
-        void calculateTextureCoords(Vertex* vertices, char symbol);
-        void calculateTextMesh();
+        void getPositionofChar(char symbol, glm::vec2* index); // deprecated
+        void calculateTextureCoords(Vertex* vertices, char symbol); // deprecated
+        void calculateTextMesh(); // deprecated
     public:
         glm::vec2 size = glm::vec2(0.0);
         char* textContent = NULL;
@@ -29,11 +29,11 @@ namespace Gengine
         int Resize(glm::vec2 size);
         int Recolour(glm::vec4 textColour);
         int UpdateText();
-        void SetReferenceLayout(Glayout* layout);
-        void AddToLayout();
-        void RemoveFromLayout();
-        void AddAsChild(G_UIelement* parent);
-        G_UIelement* TextElement();
-        void Delete();
+        void SetReferenceLayout(Glayout* layout) override;
+        void AddToLayout() override;
+        void RemoveFromLayout() override;
+        void AddAsChild(G_UIelement* parent) override;
+        G_UIelement* Element() override;
+        void Delete() override;
     };
 }

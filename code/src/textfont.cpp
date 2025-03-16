@@ -76,7 +76,7 @@ namespace Gengine
             return -1;
         }
 
-        result = fscanf(file, "page id=%hd file=\"%127[^\"]\"\n", &page_id, page_file);
+        result = fscanf(file, "page id=%hd file=\"%127[^\"]\"\n", (short int*)&page_id, page_file);
         if (result != 2) {
             fprintf(stderr, "Error reading page info, expected 2 items, got %d\n", result);
             Free();

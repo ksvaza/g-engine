@@ -3,8 +3,9 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoords;
-layout (location = 3) in vec2 aTexOffset;
-layout (location = 4) in vec2 aTexScale;
+layout (location = 3) in vec3 aNormal;
+layout (location = 4) in vec2 aTexOffset;
+layout (location = 5) in vec2 aTexScale;
 
 uniform mat4 uModel;
 uniform mat4 uView;

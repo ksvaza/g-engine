@@ -12,6 +12,7 @@ namespace Gengine
         float x, y, z;
         float r, g, b, a;
         float u, v;
+        float nx, ny, nz;
         float tx, ty, tw, th;
         float textureIndex;
     }Vertex;
@@ -60,9 +61,9 @@ namespace Gengine
         glm::vec4 colour;
         Texture* textures = NULL;
         int TextureCount = 0;
-        int* textureNameAssociations = NULL;
-        char** textureNames = NULL;
-        uint16_t textureNameCount = 0;
+        int* materialTextureAssociations = NULL;
+        char** materialNames = NULL;
+        uint16_t materialCount = 0;
         AABox* atlasBounds = NULL;
         void* atlas = NULL;
 
@@ -104,12 +105,13 @@ namespace Gengine
 
         static int CalculateBounds(Mesh* mesh);
         static int CalculateTextureCoordinates(Mesh* mesh);
+        static int CalculateNormals(Mesh* mesh);
         static int CopyMesh(Mesh* destinaton, Mesh* source);
         static int StichMesh(Mesh* base, Mesh* add);
         static int AddMesh(Mesh* base, Mesh* add);
         static int TransformMesh(Mesh* mesh, Transform transform);
 
-        static int LoadOBJ(Mesh* mesh, const char* path);
-        static int LoadMTL(Mesh* mesh, const char* path);
+        static int LoadOBJ(Mesh* mesh, const char* path); // deprecated
+        static int LoadMTL(Mesh* mesh, const char* path); // deprecated
     };
 }

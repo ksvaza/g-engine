@@ -6,9 +6,10 @@
 #include <mesh.hpp>
 #include <hwinputs.hpp>
 #include <glm/glm.hpp>
-#include <uicreator.hpp>
+#include <uielement.hpp>
 #include <uibutton.hpp>
 #include <uislider.hpp>
+#include <uidropdown.hpp>
 #include <textureatlas.hpp>
 
 using namespace std;
@@ -20,7 +21,7 @@ namespace Gengine
 
     void Glayout::recursiveAddAttribute(G_UIelement* element, G_UIattribType type)
     {
-        for (int i = 0; i < element->attribCount; i++)
+        /*for (int i = 0; i < element->attribCount; i++)
         {
             if (element->attributes[i]->type == type)
             {
@@ -30,11 +31,22 @@ namespace Gengine
         for (int j = 0; j < element->childCount; j++)
         {
             recursiveAddAttribute(element->children[j], type);
+        }*/
+        for (int16_t i = 0; i < element->attribCount; i++)
+        {
+            if (element->attributes[i]->type == type)
+            {
+                UI_attributeMap2[element][type] = element->attributes[i];
+            }
+        }
+        for (int16_t i = 0; i < element->childCount; i++)
+        {
+            recursiveAddAttribute(element->children[i], type);
         }
     }
     void Glayout::recursiveRemoveAttribute(G_UIelement* element, G_UIattribType type)
     {
-        for (int i = 0; i < element->attribCount; i++)
+        /*for (int i = 0; i < element->attribCount; i++)
         {
             if (element->attributes[i]->type == type)
             {
@@ -51,24 +63,95 @@ namespace Gengine
         for (int i = 0; i < element->childCount; i++)
         {
             recursiveRemoveAttribute(element->children[i], type);
+        }*/
+        for (int16_t i = 0; i < element->attribCount; i++)
+        {
+            if (element->attributes[i]->type == type)
+            {
+                UI_attributeMap2[element].erase(type);
+            }
+        }
+        for (int16_t i = 0; i < element->childCount; i++)
+        {
+            recursiveRemoveAttribute(element->children[i], type);
         }
     }
-    void Glayout::sortAttributeMap(G_UIattribType type)
+    void Glayout::sortAttributeMap()
     {
         // Sort attribute map by depth where largest value is first
-        for (int i = 0; i < (int)UI_attributeMap[type].size(); i++)
-        {
-            for (int j = 0; j < (int)UI_attributeMap[type].size() - 1; j++)
-            {
-                if (UI_attributeMap[type][j]->transform.position.z < UI_attributeMap[type][j + 1]->transform.position.z)
-                {
-                    G_UIelement* temp = UI_attributeMap[type][j];
-                    UI_attributeMap[type][j] = UI_attributeMap[type][j + 1];
-                    UI_attributeMap[type][j + 1] = temp;
+        // Take into account the full parent tree of the element to calculate correct depth
+        typedef struct {
+            G_UIelement* element;
+            G_UIattribType type;
+            G_UIelementAttribute* attribute;
+            float depth;
+        } ElementDepthPair;
+
+        // Count the total elements across all attribute types
+        int count = 0;
+        for (auto it = UI_attributeMap2.begin(); it != UI_attributeMap2.end(); it++) {
+            count += it->second.size();
+        }
+
+        // Allocate memory for the array
+        ElementDepthPair* depthPairs = (ElementDepthPair*)malloc(count * sizeof(ElementDepthPair));
+        int index = 0;
+
+        // Fill the array with elements and calculate their depths
+        for (auto elementIt = UI_attributeMap2.begin(); elementIt != UI_attributeMap2.end(); elementIt++) {
+            G_UIelement* element = elementIt->first;
+            float baseDepth = element->transform.position.z;
+            
+            // Calculate full depth including all parents
+            G_UIelement* parent = element->parent;
+            while (parent) {
+                baseDepth += parent->transform.position.z;
+                parent = parent->parent;
+            }
+            
+            // Add each attribute type for this element
+            for (auto attrIt = elementIt->second.begin(); attrIt != elementIt->second.end(); attrIt++) {
+                depthPairs[index].element = element;
+                depthPairs[index].type = attrIt->first;
+                depthPairs[index].attribute = attrIt->second;
+                depthPairs[index].depth = baseDepth;
+                index++;
+            }
+        }
+
+        // Sort the array by depth (bubble sort)
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = 0; j < count - i - 1; j++) {
+                if (depthPairs[j].depth < depthPairs[j + 1].depth) {
+                    ElementDepthPair temp = depthPairs[j];
+                    depthPairs[j] = depthPairs[j + 1];
+                    depthPairs[j + 1] = temp;
                 }
             }
         }
+
+        // Clear and rebuild UI_attributeMap2 with sorted elements
+        UI_attributeMap2.clear();
+        
+        // Rebuild the map based on sorted depth
+        for (int i = 0; i < count; i++) {
+            G_UIelement* element = depthPairs[i].element;
+            G_UIattribType type = depthPairs[i].type;
+            G_UIelementAttribute* attribute = depthPairs[i].attribute;
+            
+            // Make sure element entry exists in map
+            if (UI_attributeMap2.find(element) == UI_attributeMap2.end()) {
+                UI_attributeMap2[element] = std::map<G_UIattribType, G_UIelementAttribute*>();
+            }
+            
+            // Add the attribute with its type
+            UI_attributeMap2[element][type] = attribute;
+        }
+
+        // Free the allocated memory
+        free(depthPairs);
     }
+    
     void Glayout::recursiveTextureAtlasStich(G_UIelement* element, TextureAtlas* atlas)
     {
         if (element->mesh.TextureCount > 0)
@@ -113,29 +196,46 @@ namespace Gengine
     }
     void Glayout::DeleteElement(G_UIelement* element)
     {
+        if (!element) return;
+
         element->mesh.Delete();
         element->supermesh.Delete();
-        if (element->childCount > 0)
+
+        if (element->childCount > 0 && element->children)
         {
             for (int i = 0; i < element->childCount; i++)
             {
-                DeleteElement(element->children[i]);
+                if (element->children[i])
+                {
+                    DeleteElement(element->children[i]);
+                }
             }
         }
-        if (element->attribCount > 0)
+        free(element->children);
+        element->children = NULL;
+        element->childCount = 0;
+        if (element->attribCount > 0 && element->attributes)
         {
             for (int i = 0; i < element->attribCount; i++)
             {
-                free(element->attributes[i]);
+                if (element->attributes[i])
+                {
+                    free(element->attributes[i]);
+                    element->attributes[i] = NULL;
+                }
             }
+            free(element->attributes);
+            element->attributes = NULL;
+            element->attribCount = 0;
         }
+        
         if (element->parent)
         {
-            for (int i = 0; i < element->childCount; i++)
+            for (int i = 0; i < element->parent->childCount; i++)
             {
-                if (element->children[i]->uniqueID == element->uniqueID)
+                if (element->parent->children[i] && element->parent->children[i]->uniqueID == element->uniqueID)
                 {
-                    element->children[i] = NULL;
+                    element->parent->children[i] = NULL;
                 }
             }
             SortChildren(element->parent);
@@ -155,6 +255,19 @@ namespace Gengine
         parent->children[parent->childCount] = child;
         child->parent = parent;
         parent->childCount++;
+    }
+    int Glayout::RemoveChild(G_UIelement* parent, G_UIelement* child)
+    {
+        if (!parent || !child) { return -1; }
+        for (int i = 0; i < parent->childCount; i++)
+        {
+            if (parent->children[i]->uniqueID == child->uniqueID)
+            {
+                parent->children[i] = NULL;
+                return 0;
+            }
+        }
+        return -1;
     }
     G_UIelementAttribute* Glayout::GetAttributeByType(G_UIelement* element, G_UIattribType type)
     {
@@ -483,8 +596,10 @@ namespace Gengine
         
         recursiveAddAttribute(element, G_BUTTON_ATTRIB);
         recursiveAddAttribute(element, G_SLIDER_ATTRIB);
-        sortAttributeMap(G_BUTTON_ATTRIB);
-        sortAttributeMap(G_SLIDER_ATTRIB);
+        recursiveAddAttribute(element, G_DROPDOWN_ATTRIB);
+        //sortAttributeMap(G_BUTTON_ATTRIB);
+        //sortAttributeMap(G_SLIDER_ATTRIB);
+        sortAttributeMap();
     }
     void Glayout::RemoveElement(G_UIelement* element)
     {
@@ -561,33 +676,50 @@ namespace Gengine
             CalculateSupermesh(UI_elementList[i], -1); // Calculate supermeshes
             UI_elementList[i]->supermesh.SetBoundingBox(CalculateRelativeBounds(UI_elementList[i], -1)); // Calculate relative bounds
         }
-        //printf("Button count: %d\n", (int)UI_attributeMap[G_BUTTON_ATTRIB].size());
-        for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
-        {
-            G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
-            if (!element) { printf("Null element!\n"); continue; }
-            G_UIelementAttribute* attrib = GetAttributeByType(element, G_BUTTON_ATTRIB);
-            if (!attrib) { printf("Button without an attribute!\n"); continue; }
-            G_UIattribButton* button = &attrib->button;
-            if (!button) { printf("Null button!\n"); continue; }
-            GUI_button* buttonClass = (GUI_button*)button->button;
-            if (!buttonClass) { printf("Null button class!\n"); continue; }
-
-            buttonClass->Precalculate();
-        }
         //printf("Slider count: %d\n", (int)UI_attributeMap[G_SLIDER_ATTRIB].size());
-        for (int i = 0; i < (int)UI_attributeMap[G_SLIDER_ATTRIB].size(); i++)
+        for (auto it = UI_attributeMap2.begin(); it != UI_attributeMap2.end(); it++)
         {
-            G_UIelement* element = UI_attributeMap[G_SLIDER_ATTRIB][i];
-            if (!element) { printf("Null element!\n"); continue; }
-            G_UIelementAttribute* attrib = GetAttributeByType(element, G_SLIDER_ATTRIB);
-            if (!attrib) { printf("Slider without an attribute!\n"); continue; }
-            G_UIattribSlider* slider = &attrib->slider;
-            if (!slider) { printf("Null slider!\n"); continue; }
-            GUI_slider* sliderClass = (GUI_slider*)slider->slider;
-            if (!sliderClass) { printf("Null slider class!\n"); continue; }
+            for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
+            {
+                G_UIattribType type = it2->first;
+                G_UIelementAttribute* attrib = it2->second;
+                switch (type)
+                {
+                case G_BUTTON_ATTRIB:
+                    {
+                        G_UIattribButton* button = &attrib->button;
+                        if (!button) { printf("Null button!\n"); continue; }
+                        GUI_button* buttonClass = (GUI_button*)button->button;
+                        if (!buttonClass) { printf("Null button class!\n"); continue; }
 
-            sliderClass->Precalculate();
+                        buttonClass->Precalculate();
+                    }
+                    break;
+                case G_SLIDER_ATTRIB:
+                    {
+                        G_UIattribSlider* slider = &attrib->slider;
+                        if (!slider) { printf("Null slider!\n"); continue; }
+                        GUI_slider* sliderClass = (GUI_slider*)slider->slider;
+                        if (!sliderClass) { printf("Null slider class!\n"); continue; }
+
+                        sliderClass->Precalculate();
+                    }
+                    break;
+                case G_DROPDOWN_ATTRIB:
+                    {
+                        G_UIattribDropdown* dropdown = &attrib->dropdown;
+                        if (!dropdown) { printf("Null dropdown!\n"); continue; }
+                        GUI_DROPDOWN_FORWARDER* forwarder = (GUI_DROPDOWN_FORWARDER*)dropdown->forwarder;
+                        GUI_dropdown* dropdownClass = (GUI_dropdown*)forwarder->forward;
+                        if (!dropdownClass) { printf("Null dropdown class!\n"); continue; }
+
+                        dropdownClass->Precalculate();
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
         }
         ActiveElement = NULL;
         return 0;
@@ -595,211 +727,245 @@ namespace Gengine
     void Glayout::Update()
     {
         if (Input->Mouse.Status != GLFW_CURSOR_NORMAL) { return; }
-        for (int i = 0; i < (int)UI_attributeMap[G_BUTTON_ATTRIB].size(); i++)
-        {
-            G_UIelement* element = UI_attributeMap[G_BUTTON_ATTRIB][i];
-            if (!element) { printf("Null element!\n"); continue; }
-            G_UIelementAttribute* attrib = GetAttributeByType(element, G_BUTTON_ATTRIB);
-            if (!attrib) { printf("Button without an attribute!\n"); continue; }
 
-            G_UIattribButton* button = &attrib->button;
-            if (!button) { printf("Null button!\n"); continue; }
-            // last state
-            G_UIattribButton laststate = *button;
+        // Process all elements in the sorted attribute map
+        for (auto elementIt = UI_attributeMap2.begin(); elementIt != UI_attributeMap2.end(); elementIt++) {
+            G_UIelement* element = elementIt->first;
+            if (!element || !element->visible) continue;
 
-            if (!button->isActive) { printf("Inactive!\n"); continue; }
+            // Process each attribute type for this element
+            for (auto attrIt = elementIt->second.begin(); attrIt != elementIt->second.end(); attrIt++) {
+                G_UIattribType type = attrIt->first;
+                G_UIelementAttribute* attribute = attrIt->second;
+                if (!attribute) continue;
 
-            // Hover logic
-            glm::vec2 mousePos = Input->ConvertPixelToWorldSpace(Input->Mouse.MousePosition, glm::vec2(Gwindow->Width, Gwindow->Height), UIviewMatrix, UIprojectionMatrix);
-            glm::mat4 transform = glm::mat4(1.0f);
-            G_UIelement* parent = element;
-            while (parent)
-            {
-                transform = TransformToMatrix(parent->transform);
-                parent = parent->parent;
-            }
-
-            mousePos = glm::inverse(transform) * glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
-            char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), button->bounds);
-            char changed = 0;
-            
-            if (isInBounds)
-            {
-                if (!button->isHovered)
-                {
-                    if (button->onHoverIn) { button->onHoverIn(button->button); }
-                    changed = 1;
+                // Skip inactive elements
+                if ((type == G_BUTTON_ATTRIB && !attribute->button.isActive) ||
+                    (type == G_SLIDER_ATTRIB && !attribute->slider.isActive)) {
+                    continue;
                 }
-                button->isHovered = 1;
-            }
-            else
-            {
-                if (button->isHovered)
-                {
-                    if (button->onHoverOut) { button->onHoverOut(button->button); }
-                    changed = 1;
-                }
-                button->isHovered = 0;
-            }
 
-            // Press/release logic for each mouse button
-            for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++)
-            {
-                // Press any mouse button if hovered
-                if (Input->Mouse.MouseButtonDown[mb] && button->isHovered)
-                {
-                    if (!button->pressedWith[mb])
-                    {
-                        // If no other button was pressed, call onPress
-                        char noOtherPressed = 1;
-                        for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++)
-                        {
-                            if (mb2 != mb && button->pressedWith[mb2])
-                            {
-                                noOtherPressed = 0;
-                                break;
+                // Get mouse position in element's local space
+                glm::vec2 mousePos = Input->ConvertPixelToWorldSpace(
+                    Input->Mouse.MousePosition, 
+                    glm::vec2(Gwindow->Width, Gwindow->Height), 
+                    UIviewMatrix, UIprojectionMatrix);
+                
+                // Transform mouse coordinates to element's local space
+                glm::mat4 transform = glm::mat4(1.0f);
+                G_UIelement* parent = element;
+                while (parent) {
+                    transform = TransformToMatrix(parent->transform);
+                    parent = parent->parent;
+                }
+                mousePos = glm::inverse(transform) * glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
+                
+                // Process according to attribute type
+                if (type == G_BUTTON_ATTRIB) {
+                    // Button specific processing
+                    G_UIattribButton* button = &attribute->button;
+                    G_UIattribButton lastState = *button;
+                    char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), button->bounds);
+                    char changed = 0;
+                    
+                    // Handle hover state
+                    if (isInBounds) {
+                        if (!button->isHovered) {
+                            if (button->onHoverIn) button->onHoverIn(button->button);
+                            changed = 1;
+                        }
+                        button->isHovered = 1;
+                    } else {
+                        if (button->isHovered) {
+                            if (button->onHoverOut) button->onHoverOut(button->button);
+                            changed = 1;
+                        }
+                        button->isHovered = 0;
+                    }
+                    
+                    // Handle mouse button presses
+                    for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++) {
+                        // Press logic
+                        if (Input->Mouse.MouseButtonDown[mb] && button->isHovered) {
+                            if (!button->pressedWith[mb]) {
+                                char noOtherPressed = 1;
+                                for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++) {
+                                    if (mb2 != mb && button->pressedWith[mb2]) {
+                                        noOtherPressed = 0;
+                                        break;
+                                    }
+                                }
+                                button->pressedWith[mb] = 1;
+                                changed = 1;
+                                if (noOtherPressed && !ActiveElement) {
+                                    button->isPressed = 1;
+                                    if (button->onPress) button->onPress(button->button);
+                                    element->isActive = 1;
+                                    ActiveElement = element;
+                                }
                             }
                         }
-                        button->pressedWith[mb] = 1;
-                        changed = 1;
-                        if (noOtherPressed && !ActiveElement)
-                        {
-                            button->isPressed = 1;
-                            if (button->onPress) { button->onPress(button->button); }
-                            element->isActive = 1;
-                            ActiveElement = element;
-                        }
-                    }
-                }
-
-                if (Input->Mouse.MouseButtonUp[mb])
-                {
-                    if (button->isPressed)
-                    {
-                        button->isPressed = 0;
-                        if (button->onRelease) { button->onRelease(button->button); }
-                        ActiveElement->isActive = 0;
-                        ActiveElement = NULL;
-                    }
-                    if (button->pressedWith[mb])
-                    {
-                        button->pressedWith[mb] = 0;
-                        changed = 1;
-                    }
-                }
-            }
-
-            if (changed)
-            {
-                if (button->onStateChange) { button->onStateChange(button->button, laststate); }
-            }
-        }
-        for (int i = 0; i < (int)UI_attributeMap[G_SLIDER_ATTRIB].size(); i++)
-        {
-            G_UIelement* element = UI_attributeMap[G_SLIDER_ATTRIB][i];
-            if (!element) { printf("Null element!\n"); continue; }
-            G_UIelementAttribute* attrib = GetAttributeByType(element, G_SLIDER_ATTRIB);
-            if (!attrib) { printf("Slider without an attribute!\n"); continue; }
-
-            G_UIattribSlider* slider = &attrib->slider;
-            if (!slider) { printf("Null slider!\n"); continue; }
-            // last state
-            G_UIattribSlider laststate = *slider;
-
-            if (!slider->isActive) { printf("Inactive!\n"); continue; }
-
-            // Hover logic
-            glm::vec2 mousePos = Input->ConvertPixelToWorldSpace(Input->Mouse.MousePosition, glm::vec2(Gwindow->Width, Gwindow->Height), UIviewMatrix, UIprojectionMatrix);
-            glm::mat4 transform = glm::mat4(1.0f);
-            G_UIelement* parent = element;
-            while (parent)
-            {
-                transform = TransformToMatrix(parent->transform);
-                parent = parent->parent;
-            }
-
-            mousePos = glm::inverse(transform) * glm::vec4(mousePos.x, mousePos.y, 0.0f, 1.0f);
-            char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), slider->bounds);
-            char changed = 0;
-            
-            if (isInBounds)
-            {
-                if (!slider->isHovered)
-                {
-                    if (slider->onHoverIn) { slider->onHoverIn(slider->slider); }
-                    changed = 1;
-                }
-                slider->isHovered = 1;
-            }
-            else
-            {
-                if (slider->isHovered)
-                {
-                    if (slider->onHoverOut) { slider->onHoverOut(slider->slider); }
-                    changed = 1;
-                }
-                slider->isHovered = 0;
-            }
-
-            // Press/release logic for each mouse button
-            for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++)
-            {
-                // Press any mouse button if hovered
-                if (Input->Mouse.MouseButtonDown[mb] && slider->isHovered)
-                {
-                    if (!slider->pressedWith[mb])
-                    {
-                        // If no other button was pressed, call onPress
-                        char noOtherPressed = 1;
-                        for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++)
-                        {
-                            if (mb2 != mb && slider->pressedWith[mb2])
-                            {
-                                noOtherPressed = 0;
-                                break;
+                        
+                        // Release logic
+                        if (Input->Mouse.MouseButtonUp[mb]) {
+                            if (button->isPressed) {
+                                button->isPressed = 0;
+                                if (button->onRelease) button->onRelease(button->button);
+                                ActiveElement->isActive = 0;
+                                ActiveElement = NULL;
+                            }
+                            if (button->pressedWith[mb]) {
+                                button->pressedWith[mb] = 0;
+                                changed = 1;
                             }
                         }
-                        slider->pressedWith[mb] = 1;
-                        changed = 1;
-                        if (noOtherPressed && !ActiveElement)
-                        {
-                            slider->isPressed = 1;
-                            if (slider->onPress) { slider->onPress(slider->slider); }
-                            element->isActive = 1;
-                            ActiveElement = element;
+                    }
+                    
+                    // Call state change callback if needed
+                    if (changed && button->onStateChange) {
+                        button->onStateChange(button->button, lastState);
+                    }
+                }
+                else if (type == G_SLIDER_ATTRIB) {
+                    // Slider specific processing
+                    G_UIattribSlider* slider = &attribute->slider;
+                    G_UIattribSlider lastState = *slider;
+                    char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), slider->bounds);
+                    char changed = 0;
+                    
+                    // Handle hover state
+                    if (isInBounds) {
+                        if (!slider->isHovered) {
+                            if (slider->onHoverIn) slider->onHoverIn(slider->slider);
+                            changed = 1;
+                        }
+                        slider->isHovered = 1;
+                    } else {
+                        if (slider->isHovered) {
+                            if (slider->onHoverOut) slider->onHoverOut(slider->slider);
+                            changed = 1;
+                        }
+                        slider->isHovered = 0;
+                    }
+                    
+                    // Handle mouse button presses
+                    for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++) {
+                        // Press logic
+                        if (Input->Mouse.MouseButtonDown[mb] && slider->isHovered) {
+                            if (!slider->pressedWith[mb]) {
+                                char noOtherPressed = 1;
+                                for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++) {
+                                    if (mb2 != mb && slider->pressedWith[mb2]) {
+                                        noOtherPressed = 0;
+                                        break;
+                                    }
+                                }
+                                slider->pressedWith[mb] = 1;
+                                changed = 1;
+                                if (noOtherPressed && !ActiveElement) {
+                                    slider->isPressed = 1;
+                                    if (slider->onPress) slider->onPress(slider->slider);
+                                    element->isActive = 1;
+                                    ActiveElement = element;
+                                }
+                            }
+                        }
+                        
+                        // Release logic
+                        if (Input->Mouse.MouseButtonUp[mb]) {
+                            if (slider->isPressed) {
+                                slider->isPressed = 0;
+                                if (slider->onRelease) slider->onRelease(slider->slider);
+                                ActiveElement->isActive = 0;
+                                ActiveElement = NULL;
+                            }
+                            if (slider->pressedWith[mb]) {
+                                slider->pressedWith[mb] = 0;
+                                changed = 1;
+                            }
                         }
                     }
-                }
-
-                if (Input->Mouse.MouseButtonUp[mb])
-                {
-                    if (slider->isPressed)
-                    {
-                        slider->isPressed = 0;
-                        if (slider->onRelease) { slider->onRelease(slider->slider); }
-                        ActiveElement->isActive = 0;
-                        ActiveElement = NULL;
+                    
+                    // Handle slider position updates
+                    if (slider->isPressed) {
+                        if (slider->onPositionUpdate) slider->onPositionUpdate(slider->slider);
                     }
-                    if (slider->pressedWith[mb])
-                    {
-                        slider->pressedWith[mb] = 0;
-                        changed = 1;
+                    
+                    // Call state change callback if needed
+                    if (changed && slider->onStateChange) {
+                        slider->onStateChange(slider->slider, lastState);
                     }
                 }
-            }
-            
-            if (slider->isPressed)
-            {
-                if (slider->onPositionUpdate) { slider->onPositionUpdate(slider->slider); }
-            }
+                else if (type == G_DROPDOWN_ATTRIB) {
+                    // Dropdown specific processing
+                    G_UIattribDropdown* dropdown = &attribute->dropdown;
+                    G_UIattribDropdown lastState = *dropdown;
+                    char isInBounds = PointInBounds(glm::vec2(mousePos.x, mousePos.y), dropdown->bounds);
+                    char changed = 0;
+                    
+                    // Handle hover state
+                    if (isInBounds) {
+                        if (!dropdown->isHovered) {
+                            if (dropdown->onHoverIn) dropdown->onHoverIn(dropdown->forwarder);
+                            changed = 1;
+                        }
+                        dropdown->isHovered = 1;
+                    } else {
+                        if (dropdown->isHovered) {
+                            if (dropdown->onHoverOut) dropdown->onHoverOut(dropdown->forwarder);
+                            changed = 1;
+                        }
+                        dropdown->isHovered = 0;
+                    }
+                    
+                    // Handle mouse button presses
+                    for (int mb = 0; mb < _MAX_MOUSE_BUTTON_COUNT; mb++) {
+                        // Press logic
+                        if (Input->Mouse.MouseButtonDown[mb] && dropdown->isHovered) {
+                            if (!dropdown->pressedWith[mb]) {
+                                char noOtherPressed = 1;
+                                for (int mb2 = 0; mb2 < _MAX_MOUSE_BUTTON_COUNT; mb2++) {
+                                    if (mb2 != mb && dropdown->pressedWith[mb2]) {
+                                        noOtherPressed = 0;
+                                        break;
+                                    }
+                                }
+                                dropdown->pressedWith[mb] = 1;
+                                changed = 1;
+                                if (noOtherPressed && !ActiveElement) {
+                                    dropdown->isPressed = 1;
+                                    if (dropdown->onPress) dropdown->onPress(dropdown->forwarder);
+                                    element->isActive = 1;
+                                    ActiveElement = element;
+                                }
+                            }
+                        }
+                        
+                        // Release logic
+                        if (Input->Mouse.MouseButtonUp[mb]) {
+                            if (dropdown->isPressed) {
+                                dropdown->isPressed = 0;
+                                if (dropdown->onRelease) dropdown->onRelease(dropdown->forwarder);
+                                ActiveElement->isActive = 0;
+                                ActiveElement = NULL;
+                            }
+                            if (dropdown->pressedWith[mb]) {
+                                dropdown->pressedWith[mb] = 0;
+                                changed = 1;
+                            }
+                        }
+                    }
 
-            if (changed)
-            {
-                if (slider->onStateChange) { slider->onStateChange(slider->slider, laststate); }
+                    // Call state change callback if needed
+                    if (changed && dropdown->onStateChange) {
+                        dropdown->onStateChange(dropdown->forwarder, lastState);
+                    }
+                }
+                // Additional attribute types can be handled here
             }
         }
     }
-
+    
     // Static functions
     // ----------------------------------------------------------------
 

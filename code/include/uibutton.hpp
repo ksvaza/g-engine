@@ -1,15 +1,16 @@
 #pragma once
 #include <laygui.hpp>
-#include <uicreator.hpp>
+#include <uielement.hpp>
 #include <glm/glm.hpp>
 
 namespace Gengine
 {
-    class GUI_button {
+    class GUI_button : public GUI_element
+    {
     private:
-        Glayout* referenceLayout = NULL;
-        G_UIelement* buttonElement = NULL;
-        G_UIelementAttribute* buttonAttribute = NULL;
+        //Glayout* referenceLayout = NULL;
+        //G_UIelement* element = NULL;
+        //G_UIelementAttribute* attribute = NULL;
         glm::vec4 buttonColour = glm::vec4(1.0);
         GUI_alignment orientation = GUI_DEFAULT;
         glm::vec2 size = glm::vec2(0.0);
@@ -28,16 +29,15 @@ namespace Gengine
         int Resize(glm::vec2 size);
         int Recolour(glm::vec4 buttonColour);
         int UpdateBounds();
-        int UpdateMesh();
         int Precalculate();
         char IsPressed();
         char PressedWith(int mouseButton);
         char IsHovered();
-        void SetReferenceLayout(Glayout* layout);
-        void AddToLayout();
-        void RemoveFromLayout();
-        void AddAsChild(G_UIelement* parent);
-        G_UIelement* Element();
-        void Delete();
+        void SetReferenceLayout(Glayout* layout) override;
+        void AddToLayout() override;
+        void RemoveFromLayout() override;
+        void AddAsChild(G_UIelement* parent) override;
+        G_UIelement* Element() override;
+        void Delete() override;
     };
 }

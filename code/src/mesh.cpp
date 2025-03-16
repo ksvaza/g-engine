@@ -31,8 +31,8 @@ namespace Gengine
         mesh.textures = NULL;
         mesh.atlas = NULL;
         mesh.atlasBounds = NULL;
-        mesh.textureNames = NULL;
-        mesh.textureNameAssociations = NULL;
+        mesh.materialNames = NULL;
+        mesh.materialTextureAssociations = NULL;
         return mesh;
     }
     void Mesh::Create(int vertexCount, int indexCount)
@@ -71,13 +71,13 @@ namespace Gengine
         if (Indices) { free(Indices); }
         if (textures) { free(textures); }
         if (atlas) { free(atlas); }
-        if (textureNames && textureNameCount > 0)
+        if (materialNames && materialCount > 0)
         {
-            for (int i = 0; i < textureNameCount; i++)
+            for (int i = 0; i < materialCount; i++)
             {
-                free(textureNames[i]);
+                free(materialNames[i]);
             }
-            free(textureNames);
+            free(materialNames);
         }
         *this = Empty();
     }
@@ -191,6 +191,7 @@ namespace Gengine
             printf("{\n\tPosition: (%f, %f, %f)\n", Vertices[i].x, Vertices[i].y, Vertices[i].z);
             printf("\tColor: (%f, %f, %f, %f)\n", Vertices[i].r, Vertices[i].g, Vertices[i].b, Vertices[i].a);
             printf("\tTexture coordinates: (%f, %f)\n", Vertices[i].u, Vertices[i].v);
+            printf("\tNormal: (%f, %f, %f)\n", Vertices[i].nx, Vertices[i].ny, Vertices[i].nz);
             printf("\tTexture transformation: (%f, %f, %f, %f)\n", Vertices[i].tx, Vertices[i].ty, Vertices[i].tw, Vertices[i].th);
             printf("\tTexture index: %d\n}", (int)Vertices[i].textureIndex);
             printf("\n");
@@ -310,6 +311,9 @@ namespace Gengine
             Vertices[i].a = 1.0f;
             Vertices[i].u = 0.0f;
             Vertices[i].v = 0.0f;
+            Vertices[i].nx = 0.0f;
+            Vertices[i].ny = 0.0f;
+            Vertices[i].nz = 1.0f;
             Vertices[i].tx = 0.0f;
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
@@ -453,6 +457,9 @@ namespace Gengine
             mesh->GetVertices()[i].g = 1.0f;
             mesh->GetVertices()[i].b = 1.0f;
             mesh->GetVertices()[i].a = 1.0f;
+            mesh->GetVertices()[i].nx = 0.0f;
+            mesh->GetVertices()[i].ny = 0.0f;
+            mesh->GetVertices()[i].nz = 1.0f;
             mesh->GetVertices()[i].tx = 0.0f;
             mesh->GetVertices()[i].ty = 0.0f;
             mesh->GetVertices()[i].tw = 0.0f;
@@ -509,6 +516,9 @@ namespace Gengine
             Vertices[i].g = 1.0f;
             Vertices[i].b = 1.0f;
             Vertices[i].a = 1.0f;
+            Vertices[i].nx = 0.0f;
+            Vertices[i].ny = 0.0f;
+            Vertices[i].nz = 1.0f;
             Vertices[i].tx = 0.0f;
             Vertices[i].ty = 0.0f;
             Vertices[i].tw = 0.0f;
@@ -528,35 +538,35 @@ namespace Gengine
 
         // Verticies
         float vertices[] = {
-            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,   0.0,  0.0, -1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,   0.0,  0.0, -1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,   0.0,  0.0, -1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,   0.0,  0.0, -1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
 
-            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,   0.0,  0.0,  1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,   0.0,  0.0,  1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,   0.0,  0.0,  1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,   0.0,  0.0,  1.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
 
-            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,  -1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,  -1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,  -1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,  -1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
 
-             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,   1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,   1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,   1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,   1.0,  0.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
 
-            -unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx, -uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,   0.0, -1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,   0.0, -1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,   0.0, -1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx, -uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,   0.0, -1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
 
-            -unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx,  uny, -unz,  1.0, 1.0, 1.0, 1.0,  1.0, 1.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-             unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  1.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0,
-            -unx,  uny,  unz,  1.0, 1.0, 1.0, 1.0,  0.0, 0.0,  0.0, 0.0, 0.0, 0.0,  -1.0
+            -unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   0.0, 1.0,   0.0,  1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny, -unz,   1.0, 1.0, 1.0, 1.0,   1.0, 1.0,   0.0,  1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+             unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   1.0, 0.0,   0.0,  1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0,
+            -unx,  uny,  unz,   1.0, 1.0, 1.0, 1.0,   0.0, 0.0,   0.0,  1.0,  0.0,   0.0, 0.0, 0.0, 0.0,  -1.0
         };
         // Indicies
         unsigned int indices[] = {
@@ -622,6 +632,10 @@ namespace Gengine
         }
 
         return 0;
+    }
+    int MeshGenerator::CalculateNormals(Mesh* mesh)
+    {
+        return -1;
     }
     int MeshGenerator::CopyMesh(Mesh* destination, Mesh* source)
     {
@@ -710,9 +724,11 @@ namespace Gengine
         {
             // Tranform
             glm::vec4 vertex = glm::vec4(addVertices[i].x, addVertices[i].y, addVertices[i].z, 1.0f);
+            glm::vec4 normal = glm::vec4(addVertices[i].nx, addVertices[i].ny, addVertices[i].nz, 0.0f);
             glm::mat4 transform = Gengine::TransformToMatrix(add->GetTransform());
             glm::mat4 invBaseTransform = glm::inverse(Gengine::TransformToMatrix(base->GetTransform()));
             vertex = invBaseTransform * transform * vertex;
+            normal = invBaseTransform * transform * normal;
             glm::vec4 colour = add->GetColour();
             glm::vec4 baseColour = base->GetColour();
 
@@ -724,6 +740,7 @@ namespace Gengine
                 addVertices[i].b * colour.b / baseColour.b, 
                 addVertices[i].a * colour.a / baseColour.a,
                 addVertices[i].u, addVertices[i].v, 
+                normal.x, normal.y, normal.z,
                 addVertices[i].tx, addVertices[i].ty, addVertices[i].tw, addVertices[i].th,
                 addVertices[i].textureIndex
             };
@@ -761,12 +778,14 @@ namespace Gengine
         for (int i = 0; i < mesh->VertexCount; i++)
         {
             glm::vec4 p = m * glm::vec4(verts[i].x, verts[i].y, verts[i].z, 1.0f);
+            glm::vec4 n = m * glm::vec4(verts[i].nx, verts[i].ny, verts[i].nz, 0.0f);
             verts[i].x = p.x; verts[i].y = p.y; verts[i].z = p.z;
+            verts[i].nx = n.x; verts[i].ny = n.y; verts[i].nz = n.z;
         }
 
         return 0;
     }
-    int MeshGenerator::LoadOBJ(Mesh* mesh, const char* path)
+    int MeshGenerator::LoadOBJ(Mesh* mesh, const char* path) // deprecated
     {
         FILE* file = fopen(path, "r");
         if (!file)
@@ -799,8 +818,8 @@ namespace Gengine
 
         mesh->Delete();
         mesh->Create(vertexCount, indexCount);
-        mesh->textureNames = (char**)malloc(sizeof(char*) * textureCount);
-        mesh->textureNameCount = textureCount;
+        mesh->materialNames = (char**)malloc(sizeof(char*) * textureCount);
+        mesh->materialCount = textureCount;
         Vertex* vertices = mesh->GetVertices();
         Index* indices = mesh->GetIndices();
 
@@ -864,9 +883,9 @@ namespace Gengine
             else if (line[0] == 'u' && line[1] == 's' && line[2] == 'e' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
             {
                 mtlIndex++;
-                mesh->textureNames[mtlIndex] = (char*)malloc(sizeof(char) * 128);
-                sscanf(line, "usemtl %128s", mesh->textureNames[mtlIndex]);
-                //printf("Texture name: %s\n", mesh->textureNames[mtlIndex]);
+                mesh->materialNames[mtlIndex] = (char*)malloc(sizeof(char) * 128);
+                sscanf(line, "usemtl %128s", mesh->materialNames[mtlIndex]);
+                //printf("Texture name: %s\n", mesh->materialNames[mtlIndex]);
             }
         }
         
@@ -889,7 +908,7 @@ namespace Gengine
 
         return 0;
     }
-    int MeshGenerator::LoadMTL(Mesh* mesh, const char* path)
+    int MeshGenerator::LoadMTL(Mesh* mesh, const char* path) // deprecated
     {
         //printf("Loading MTL file: %s\n", path);
         FILE* file = fopen(path, "r");
@@ -900,14 +919,14 @@ namespace Gengine
         }
 
         // First pass to count color texture file associations
-        int textureNameCount = 0;
+        int materialCount = 0;
         int textureCount = 0;
         char line[128];
         while (fgets(line, 128, file))
         {
             if (line[0] == 'n' && line[1] == 'e' && line[2] == 'w' && line[3] == 'm' && line[4] == 't' && line[5] == 'l')
             {
-                textureNameCount++;
+                materialCount++;
             }
             else if (line[0] == 'm' && line[1] == 'a' && line[2] == 'p' && line[3] == '_')
             {
@@ -915,10 +934,10 @@ namespace Gengine
             }
         }
         fseek(file, 0, SEEK_SET);
-        mesh->textureNameAssociations = (int*)malloc(sizeof(int) * textureNameCount);
-        for (int i = 0; i < textureNameCount; i++)
+        mesh->materialTextureAssociations = (int*)malloc(sizeof(int) * materialCount);
+        for (int i = 0; i < materialCount; i++)
         {
-            mesh->textureNameAssociations[i] = -1;
+            mesh->materialTextureAssociations[i] = -1;
         }
         // Second pass to load each texture file and associate it with a name
         int currentName = 0;
@@ -928,9 +947,9 @@ namespace Gengine
             {
                 char name[128];
                 sscanf(line, "newmtl %128s", name);
-                for (int i = 0; i < mesh->textureNameCount; i++)
+                for (int i = 0; i < mesh->materialCount; i++)
                 {
-                    if (strcmp(mesh->textureNames[i], name) == 0)
+                    if (strcmp(mesh->materialNames[i], name) == 0)
                     {
                         currentName = i;
                         break;
@@ -958,7 +977,7 @@ namespace Gengine
                 if (!texture) { return -1; }
                 texture->LoadData(texturePath);
                 mesh->AddTexture(*texture);
-                mesh->textureNameAssociations[currentName] = mesh->TextureCount - 1;
+                mesh->materialTextureAssociations[currentName] = mesh->TextureCount - 1;
             }
         }
 

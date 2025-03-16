@@ -51,7 +51,7 @@ namespace Gengine
         int calculateTextureCoords(Vertex* vertices, uint8_t symbol);
     public:
         uint8_t charsCount = 0;
-        Texture fontTexture = (Texture){ .data = NULL, .width = 0, .height = 0, .nrChannels = 0 };
+        Texture fontTexture;
 
         int LoadImage(const char* path);
         int LoadFont(const char* path);
