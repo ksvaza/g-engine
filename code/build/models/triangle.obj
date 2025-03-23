@@ -1,0 +1,17 @@
+# This is a model for a cube
+
+# Material name
+# usemtl matA
+
+# Vertices
+v -0.5 -0.5  0.0
+v  0.5 -0.5  0.0
+v  0.0  0.5  0.0
+
+# UV coordinates
+# vt 0.0 0.0
+# vt 1.0 0.0
+# vt 0.5 1.0
+
+# Indicies
+f 1  2  3
